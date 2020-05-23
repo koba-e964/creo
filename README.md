@@ -1,12 +1,29 @@
 # creo
 
-`creo` helps you do pretty much anything about creating problems, especially on AtCoder, such as testing, generating, validating.
+`creo` helps you do pretty much anything about creating problems, especially on AtCoder, such as testing, generating and validating. `creo` achieves them with interoperability.
+
+## Overview
+A `creo` project manages a collection of files needed to prepare for a **single problem**. `creo` provides a functionality to manage it.
+
+What `creo` can do:
+- test/validate/generate automatically
+- interoperate with coworkers who do not use `creo`
+  - Shell scripts that automatically run tasks (e.g. validation, generation) will be provided
+  - Other than `creo.toml`, no `creo`-specific files will be created in project directories
+- test/validate/generate better than provided scripts
+  - Results are cached in temporary directories
+  
+
+Limitations are:
+- `creo` does not support testing multiple problems in a problemset. If you want to do this, you need to do it manually (e.g. running `creo` in each subdirectory.)
 
 ## Directory structure
 `creo` expects the following directory structure for each project.
 
 ```
+- creo.toml (configuration file)
 - etc/
+  |- etc/score.txt
   |- etc/val-xxxx.cpp
   |- etc/gen-xxxx.cpp
   |- etc/output_checker.cpp
@@ -35,4 +52,32 @@
   :
   :
 ```
-`creo init DESTINATION` will create a directory with this structure at `DESTINATION`. Missing intermediate directories will be automatically created.
+
+## Commands
+### `creo init`
+`creo init DESTINATION` will create a directory with the aforementioned structure at `DESTINATION`. Missing intermediate directories will be automatically created.
+For a problem, a creo project should be created.
+
+### `creo add`
+`creo add TYPE OUTFILE` will add a file of the designated type.
+`TYPE` can be one of the following:
+- `val`: validator (in `etc/`)
+- `gen`: generator (in `etc/`)
+- `sol`: solution (in `sol/`)
+
+If `TYPE` is `val` or `gen` and `testlib.h` is missing, it will be automatically added.
+
+Available options are:
+- `val`: nothing
+- `gen`: nothing
+- `sol`:
+  - `--wa`: the solution should emit a wrong output 
+  - `--tle`: the solution should fail to finish in the given time limit 
+
+### `creo test`
+`creo test` will test all solutions in `sol/`, checking if they behave as they are intended.
+
+### `creo publish`
+`creo publish` will publish all files in the project to the judge server.
+Authentication must be given in `creo.toml`
+- TODO: decide the format
