@@ -1,3 +1,22 @@
+#[macro_use]
+extern crate clap;
+use clap::App;
+use creo::cmd::{init, Command};
+
 fn main() {
-    println!("Hello, world!");
+    let commands = [&init::InitCommand as &dyn Command];
+
+    let mut app = App::new(crate_name!())
+        .version(crate_version!())
+        .about(crate_description!())
+        .author(crate_authors!());
+    for cmd in &commands {
+        app = app.subcommand(cmd.get_subcommand());
+    }
+    let matches = app.get_matches();
+    for cmd in &commands {
+        if let Some(()) = cmd.check(&matches) {
+            break;
+        }
+    }
 }
