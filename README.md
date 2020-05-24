@@ -56,7 +56,7 @@ Limitations are:
 ## Commands
 ### `creo init`
 `creo init DESTINATION` will create a directory with the aforementioned structure at `DESTINATION`. Missing intermediate directories will be automatically created.
-For a problem, a creo project should be created.
+If `DESTINATION/creo.toml` already exists, the creation process will fail.
 
 ### `creo add`
 `creo add TYPE OUTFILE` will add a file of the designated type.
