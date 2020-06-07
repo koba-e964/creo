@@ -48,7 +48,7 @@ mod tests {
             unreachable!();
         }
         fn open_file_for_read(&self, _filepath: &Path) -> Result<Box<dyn std::io::Read>> {
-            Ok(Box::new("don't care".as_bytes()))
+            Ok(Box::new(b"don't care" as &[u8]))
         }
         fn mkdir_p(&mut self, _path: &Path) -> Result<()> {
             unreachable!();

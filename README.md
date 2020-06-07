@@ -1,11 +1,11 @@
-# creo
+# creo [![Build Status](https://travis-ci.com/koba-e964/creo.svg?branch=master)](https://travis-ci.com/koba-e964/creo)
 
 `creo` helps you do pretty much anything about creating problems, especially on AtCoder, such as testing, generating and validating. `creo` achieves them with interoperability.
 
 ## Overview
 A `creo` project manages a collection of files needed to prepare for a **single problem**. `creo` provides a functionality to manage it.
 
-What `creo` can do:
+`creo`'s capabilities include:
 - test/validate/generate automatically
 - interoperate with coworkers who do not use `creo`
   - Shell scripts that automatically run tasks (e.g. validation, generation) will be provided
