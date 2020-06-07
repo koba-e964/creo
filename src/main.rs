@@ -1,10 +1,10 @@
 #[macro_use]
 extern crate clap;
 use clap::App;
-use creo::cmd::{init, Command};
+use creo::cmd::{check, init, Command};
 
 fn main() {
-    let commands = [&init::InitCommand as &dyn Command];
+    let commands = [&init::InitCommand as &dyn Command, &check::CheckCommand];
 
     let mut app = App::new(crate_name!())
         .version(crate_version!())

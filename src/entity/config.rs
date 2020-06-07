@@ -1,15 +1,25 @@
 use serde::{Deserialize, Serialize};
 
+use super::gen::GenConfig;
+
 /// Config file for creo.
 /// Should be placed at creo.toml
-#[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Debug)]
 pub struct CreoConfig {
+    #[serde(default = "time_limit_default")]
     time_limit: f64,
+    #[serde(default)]
+    generators: Vec<GenConfig>,
+    #[serde(default)]
     languages: Vec<LanguageConfig>,
 }
 
+fn time_limit_default() -> f64 {
+    2.0
+}
+
 /// Configuration for an available language.
-#[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Debug)]
 pub struct LanguageConfig {
     /// name
     language_name: String,
@@ -38,6 +48,7 @@ impl Default for CreoConfig {
         };
         Self {
             time_limit: 2.0,
+            generators: vec![],
             languages: vec![cpp, python],
         }
     }

@@ -81,3 +81,6 @@ Available options are:
 `creo publish` will publish all files in the project to the judge server.
 Authentication must be given in `creo.toml`
 - TODO: decide the format
+
+### `creo check`
+`creo check PROJECT` will check whether `PROJECT/creo.toml` is correct and if so, display its content.
