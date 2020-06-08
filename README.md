@@ -74,6 +74,9 @@ Available options are:
   - `--wa`: the solution should emit a wrong output 
   - `--tle`: the solution should fail to finish in the given time limit 
 
+### `creo gen`
+`creo gen PROJECT` will generate input data in `PROJECT`.
+
 ### `creo test`
 `creo test` will test all solutions in `sol/`, checking if they behave as they are intended.
 

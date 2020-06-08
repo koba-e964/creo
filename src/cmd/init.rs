@@ -58,18 +58,12 @@ mod tests {
         fn create_file_if_nonexistent(&mut self, _filepath: &Path) -> Result<Box<dyn Write>> {
             Ok(Box::new(vec![]))
         }
-        fn open_file_for_read(&self, _filepath: &Path) -> Result<Box<dyn std::io::Read>> {
-            unreachable!();
-        }
         fn mkdir_p(&mut self, path: &Path) -> Result<()> {
             self.dirs.insert(path.to_str().unwrap().to_owned());
             Ok(())
         }
         fn write_str_to_file(&self, _file: &mut dyn Write, _s: &str) -> Result<()> {
             Ok(())
-        }
-        fn read_from_file(&self, _file: &mut dyn std::io::Read) -> Result<String> {
-            unreachable!();
         }
     }
 

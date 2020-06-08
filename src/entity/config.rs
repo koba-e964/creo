@@ -7,11 +7,11 @@ use super::gen::GenConfig;
 #[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Debug)]
 pub struct CreoConfig {
     #[serde(default = "time_limit_default")]
-    time_limit: f64,
+    pub time_limit: f64,
     #[serde(default)]
-    generators: Vec<GenConfig>,
+    pub generators: Vec<GenConfig>,
     #[serde(default)]
-    languages: Vec<LanguageConfig>,
+    pub languages: Vec<LanguageConfig>,
 }
 
 fn time_limit_default() -> f64 {
@@ -22,14 +22,14 @@ fn time_limit_default() -> f64 {
 #[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Debug)]
 pub struct LanguageConfig {
     /// name
-    language_name: String,
+    pub language_name: String,
     /// target extension
-    target_ext: String,
+    pub target_ext: String,
     /// How can we compile the source code?
-    compile: String,
+    pub compile: Vec<String>,
     /// How can we run the compiled binary?
     /// If the given code is a script, this should run the original script.
-    run: String,
+    pub run: Vec<String>,
 }
 
 impl Default for CreoConfig {
@@ -37,14 +37,20 @@ impl Default for CreoConfig {
         let cpp = LanguageConfig {
             language_name: "C++".to_owned(),
             target_ext: ".cpp".to_owned(),
-            compile: "g++ -O2 -std=gnu++11 -o a.out".to_owned(),
-            run: "./a.out".to_owned(),
+            compile: vec!["g++", "-O2", "-std=gnu++11", "-o", "$OUT", "$IN"]
+                .into_iter()
+                .map(|x| x.to_owned())
+                .collect(),
+            run: vec!["./a.out".to_owned()],
         };
         let python = LanguageConfig {
             language_name: "Python".to_owned(),
             target_ext: ".py".to_owned(),
-            compile: "true".to_owned(),
-            run: "python3".to_owned(),
+            compile: vec!["cp", "$IN", "$OUT"]
+                .into_iter()
+                .map(|x| x.to_owned())
+                .collect(),
+            run: vec!["python3".to_owned()],
         };
         Self {
             time_limit: 2.0,

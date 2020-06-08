@@ -6,16 +6,36 @@ use std::path::{Path, PathBuf};
 pub trait IoUtil {
     /// Create a file if a file with the same name doesn't exist.
     /// If some of the intermediate directories are missing, they will be created.
-    fn create_file_if_nonexistent(&mut self, filepath: &Path) -> Result<Box<dyn Write>>;
+    #[allow(unused)]
+    fn create_file_if_nonexistent(&mut self, filepath: &Path) -> Result<Box<dyn Write>> {
+        unreachable!()
+    }
     /// Open a file for reading.
-    fn open_file_for_read(&self, filepath: &Path) -> Result<Box<dyn Read>>;
+    #[allow(unused)]
+    fn open_file_for_read(&self, filepath: &Path) -> Result<Box<dyn Read>> {
+        unreachable!()
+    }
     /// Make a directory at path.
     /// If some of the intermediate directories are missing, they will be created.
-    fn mkdir_p(&mut self, path: &Path) -> Result<()>;
+    #[allow(unused)]
+    fn mkdir_p(&mut self, path: &Path) -> Result<()> {
+        unreachable!()
+    }
     /// mock for write!(file, "{}", str)
-    fn write_str_to_file(&self, file: &mut dyn Write, s: &str) -> Result<()>;
+    #[allow(unused)]
+    fn write_str_to_file(&self, file: &mut dyn Write, s: &str) -> Result<()> {
+        unreachable!()
+    }
     /// mock for read_to_end
-    fn read_from_file(&self, file: &mut dyn Read) -> Result<String>;
+    #[allow(unused)]
+    fn read_from_file(&self, file: &mut dyn Read) -> Result<String> {
+        unreachable!()
+    }
+    /// Get the absolute path.
+    #[allow(unused)]
+    fn to_absolute(&self, path: &Path) -> Result<PathBuf> {
+        unreachable!()
+    }
 }
 
 pub struct IoUtilImpl;
@@ -24,7 +44,7 @@ impl IoUtil for IoUtilImpl {
     /// Create a file if a file with the same name doesn't exist.
     /// If some of the intermediate directories are missing, they will be created.
     fn create_file_if_nonexistent(&mut self, filepath: &Path) -> Result<Box<dyn Write>> {
-        let filepath = to_absolute(filepath)?;
+        let filepath = self.to_absolute(filepath)?;
         if let Some(parent) = filepath.parent() {
             self.mkdir_p(&parent)?;
         }
@@ -39,7 +59,7 @@ impl IoUtil for IoUtilImpl {
         Ok(Box::new(file))
     }
     fn mkdir_p(&mut self, path: &Path) -> Result<()> {
-        let path = to_absolute(path)?;
+        let path = self.to_absolute(path)?;
         if path.is_dir() {
             return Ok(());
         }
@@ -65,14 +85,13 @@ impl IoUtil for IoUtilImpl {
         let s = String::from_utf8(buf).unwrap();
         Ok(s)
     }
-}
-
-fn to_absolute(path: &Path) -> Result<PathBuf> {
-    let path = if path.is_absolute() {
-        path.to_owned()
-    } else {
-        std::env::current_dir()?.join(path)
+    fn to_absolute(&self, path: &Path) -> Result<PathBuf> {
+        let path = if path.is_absolute() {
+            path.to_owned()
+        } else {
+            std::env::current_dir()?.join(path)
+        }
+        .clean();
+        Ok(path)
     }
-    .clean();
-    Ok(path)
 }

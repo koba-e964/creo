@@ -1,6 +1,7 @@
 use clap::{App, ArgMatches};
 
 pub mod check;
+pub mod gen;
 pub mod init;
 
 pub trait Command {

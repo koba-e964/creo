@@ -5,6 +5,6 @@ use std::path::PathBuf;
 /// Configuration for a generator.
 #[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Debug)]
 pub struct GenConfig {
-    language_name: String,
-    path: PathBuf,
+    pub language_name: String,
+    pub path: PathBuf,
 }
