@@ -1,3 +1,4 @@
+use sha2::{Digest, Sha256};
 use std::io::{Error, Result};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -13,7 +14,7 @@ pub trait RunUtil {
     }
     /// Runs an executable once.
     #[allow(unused)]
-    fn run_once(&mut self, cd: &Path, exec: &Path) -> Result<()> {
+    fn run_once(&mut self, cd: &Path, exec: &Path, run: &[String]) -> Result<()> {
         unreachable!()
     }
     /// Runs an executable with an input file.
@@ -34,10 +35,27 @@ pub struct RunUtilImpl {
 
 impl RunUtil for RunUtilImpl {
     fn compile(&mut self, cd: &Path, src: &Path, compile: &[String]) -> Result<PathBuf> {
-        let outpath = self.io_util.to_absolute(&PathBuf::from("rand_TODO"))?;
-        let prog = &compile[0];
-        let mut args = compile[1..].to_vec();
-        for v in args.iter_mut() {
+        let tempdir = Path::new("/tmp/creo-cache/");
+        self.io_util.mkdir_p(&tempdir)?;
+        // Compute a hash value from compile and the content of src.
+        let mut hash_str = String::new();
+        {
+            let mut handle = self.io_util.open_file_for_read(src)?;
+            let content = self.io_util.read_from_file(&mut handle)?;
+            let mut hasher: Sha256 = Sha256::new();
+            for c in compile {
+                hasher.input(c.as_bytes());
+            }
+            hasher.input(content.as_bytes());
+            let hash_val = hasher.result();
+            for &val in &hash_val {
+                hash_str += &format!("{:02x}", val);
+            }
+        }
+        eprintln!("hash_str = {:?}", hash_str);
+        let outpath = tempdir.join(hash_str);
+        let mut compile = compile.to_vec();
+        for v in compile.iter_mut() {
             if *v == "$IN" {
                 *v = src.to_str().unwrap().to_owned();
             }
@@ -45,6 +63,8 @@ impl RunUtil for RunUtilImpl {
                 *v = outpath.to_str().unwrap().to_owned();
             }
         }
+        let prog = &compile[0];
+        let args = compile[1..].to_vec();
         let status = Command::new(prog).current_dir(cd).args(&args).status()?;
         if !status.success() {
             eprintln!("compile status = {}", status);
@@ -56,8 +76,16 @@ impl RunUtil for RunUtilImpl {
         }
         Ok(outpath)
     }
-    fn run_once(&mut self, cd: &Path, exec: &Path) -> Result<()> {
-        let status = Command::new(exec).current_dir(cd).status()?;
+    fn run_once(&mut self, cd: &Path, exec: &Path, run: &[String]) -> Result<()> {
+        let mut run = run.to_vec();
+        for v in run.iter_mut() {
+            if *v == "$OUT" {
+                *v = exec.to_str().unwrap().to_owned();
+            }
+        }
+        let prog = &run[0];
+        let args = run[1..].to_vec();
+        let status = Command::new(prog).args(&args).current_dir(cd).status()?;
         if !status.success() {
             if let Some(exit_code) = status.code() {
                 return Err(Error::from_raw_os_error(exit_code));

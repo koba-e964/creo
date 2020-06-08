@@ -41,7 +41,7 @@ impl Default for CreoConfig {
                 .into_iter()
                 .map(|x| x.to_owned())
                 .collect(),
-            run: vec!["./a.out".to_owned()],
+            run: vec!["$OUT".to_owned()],
         };
         let python = LanguageConfig {
             language_name: "Python".to_owned(),
@@ -50,7 +50,7 @@ impl Default for CreoConfig {
                 .into_iter()
                 .map(|x| x.to_owned())
                 .collect(),
-            run: vec!["python3".to_owned()],
+            run: vec!["python3".to_owned(), "$OUT".to_owned()],
         };
         Self {
             time_limit: 2.0,

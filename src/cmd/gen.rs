@@ -56,7 +56,7 @@ fn gen_project(proj: &str, io_util: &mut dyn IoUtil, run_util: &mut dyn RunUtil)
             .find(|&c| c.language_name == gen.language_name);
         if let Some(x) = lang_config {
             let outpath = run_util.compile(&cd, &io_util.to_absolute(&src)?, &x.compile)?;
-            run_util.run_once(&cd, &outpath)?;
+            run_util.run_once(&cd, &outpath, &x.run)?;
         } else {
             eprintln!("warning");
         }
@@ -99,7 +99,7 @@ run = ["./a.out"]
             assert_eq!(src, PathBuf::from("gen-absolute"));
             Ok("outpath".into())
         }
-        fn run_once(&mut self, _cd: &Path, exec: &Path) -> Result<()> {
+        fn run_once(&mut self, _cd: &Path, exec: &Path, _run: &[String]) -> Result<()> {
             assert_eq!(exec, PathBuf::from("outpath"));
             Ok(())
         }

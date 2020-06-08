@@ -9,5 +9,6 @@ edition = "2018"
 [dependencies]
 clap = "2"
 serde = { version = "1", features = ["derive"] }
+sha2 = "0.8"
 toml = "0.5"
 path-clean = "0.1"
