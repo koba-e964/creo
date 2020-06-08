@@ -52,8 +52,14 @@ impl RunUtil for RunUtilImpl {
                 hash_str += &format!("{:02x}", val);
             }
         }
-        eprintln!("hash_str = {:?}", hash_str);
         let outpath = tempdir.join(hash_str);
+        // If there exists an already compiled binary, return early.
+        if outpath.is_file() {
+            eprintln!(
+                "File {} exists: skipping compilation",
+                outpath.to_str().unwrap(),
+            )
+        }
         let mut compile = compile.to_vec();
         for v in compile.iter_mut() {
             if *v == "$IN" {
