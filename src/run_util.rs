@@ -3,7 +3,7 @@ use std::io::{Error, Result};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::io_util::IoUtil;
+use crate::io_util::{IoUtil, IoUtilExt};
 
 /// Utility trait for compiling/running executables.
 pub trait RunUtil {
@@ -29,19 +29,16 @@ pub trait RunUtil {
     }
 }
 
-pub struct RunUtilImpl {
-    pub io_util: Box<dyn IoUtil>,
-}
-
-impl RunUtil for RunUtilImpl {
+pub trait RunUtilExt: IoUtil {}
+impl<T: RunUtilExt> RunUtil for T {
     fn compile(&mut self, cd: &Path, src: &Path, compile: &[String]) -> Result<PathBuf> {
         let tempdir = Path::new("/tmp/creo-cache/");
-        self.io_util.mkdir_p(&tempdir)?;
+        self.mkdir_p(&tempdir)?;
         // Compute a hash value from compile and the content of src.
         let mut hash_str = String::new();
         {
-            let mut handle = self.io_util.open_file_for_read(src)?;
-            let content = self.io_util.read_from_file(&mut handle)?;
+            let mut handle = self.open_file_for_read(src)?;
+            let content = self.read_from_file(&mut handle)?;
             let mut hasher: Sha256 = Sha256::new();
             for c in compile {
                 hasher.input(c.as_bytes());
@@ -114,3 +111,8 @@ impl RunUtil for RunUtilImpl {
         todo!()
     }
 }
+
+pub struct RunUtilImpl;
+
+impl RunUtilExt for RunUtilImpl {}
+impl IoUtilExt for RunUtilImpl {}

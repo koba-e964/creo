@@ -38,9 +38,8 @@ pub trait IoUtil {
     }
 }
 
-pub struct IoUtilImpl;
-
-impl IoUtil for IoUtilImpl {
+pub trait IoUtilExt {}
+impl<T: IoUtilExt> IoUtil for T {
     /// Create a file if a file with the same name doesn't exist.
     /// If some of the intermediate directories are missing, they will be created.
     fn create_file_if_nonexistent(&mut self, filepath: &Path) -> Result<Box<dyn Write>> {
@@ -95,3 +94,7 @@ impl IoUtil for IoUtilImpl {
         Ok(path)
     }
 }
+
+pub struct IoUtilImpl;
+
+impl IoUtilExt for IoUtilImpl {}

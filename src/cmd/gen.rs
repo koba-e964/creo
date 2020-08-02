@@ -26,14 +26,7 @@ impl Command for GenCommand {
     fn check(&self, matches: &ArgMatches) -> Option<()> {
         let matches = matches.subcommand_matches(GEN_COMMAND)?;
         let proj = matches.value_of("PROJECT").unwrap();
-        gen_project(
-            proj,
-            &mut IoUtilImpl,
-            &mut RunUtilImpl {
-                io_util: Box::new(IoUtilImpl),
-            },
-        )
-        .unwrap();
+        gen_project(proj, &mut IoUtilImpl, &mut RunUtilImpl).unwrap();
         Some(())
     }
 }
