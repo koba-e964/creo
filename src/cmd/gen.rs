@@ -15,7 +15,7 @@ pub struct GenCommand;
 impl Command for GenCommand {
     fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
         SubCommand::with_name(GEN_COMMAND)
-            .about("check creo.toml")
+            .about("generate testcases (input)")
             .arg(
                 Arg::with_name("PROJECT")
                     .help("Project directory")
