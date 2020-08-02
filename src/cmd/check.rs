@@ -17,7 +17,7 @@ impl Command for CheckCommand {
                 .index(1),
         )
     }
-    fn check(&self, matches: &ArgMatches) -> Option<()> {
+    fn check(&mut self, matches: &ArgMatches) -> Option<()> {
         let matches = matches.subcommand_matches("check")?;
         let proj = matches.value_of("PROJECT").unwrap();
         check_project(proj, &mut IoUtilImpl).unwrap();

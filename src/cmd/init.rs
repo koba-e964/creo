@@ -18,7 +18,7 @@ impl Command for InitCommand {
                     .index(1),
             )
     }
-    fn check(&self, matches: &ArgMatches) -> Option<()> {
+    fn check(&mut self, matches: &ArgMatches) -> Option<()> {
         let matches = matches.subcommand_matches("init")?;
         let dest = matches.value_of("DESTINATION").unwrap();
         initialize_project(dest, &mut IoUtilImpl).unwrap();

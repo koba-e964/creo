@@ -2,12 +2,15 @@
 extern crate clap;
 use clap::App;
 use creo::cmd::{check, gen, init, Command};
+use creo::entity::project::ProjectImpl;
 
 fn main() {
-    let commands = [
-        &init::InitCommand as &dyn Command,
-        &check::CheckCommand,
-        &gen::GenCommand,
+    let mut commands = [
+        &mut init::InitCommand as &mut dyn Command,
+        &mut check::CheckCommand,
+        &mut gen::GenCommand {
+            project: ProjectImpl,
+        },
     ];
 
     let mut app = App::new(crate_name!())
@@ -18,7 +21,7 @@ fn main() {
         app = app.subcommand(cmd.get_subcommand());
     }
     let matches = app.get_matches();
-    for cmd in &commands {
+    for cmd in &mut commands {
         if let Some(()) = cmd.check(&matches) {
             break;
         }
