@@ -1,17 +1,28 @@
 use serde::{Deserialize, Serialize};
 
 use super::gen::GenConfig;
+use super::sol::SolutionConfig;
 
 /// Config file for creo.
 /// Should be placed at creo.toml
 #[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Debug)]
 pub struct CreoConfig {
+    /// Time limit in seconds.
     #[serde(default = "time_limit_default")]
     pub time_limit: f64,
+    /// Generators.
     #[serde(default)]
+    // Needed by toml: https://github.com/alexcrichton/toml-rs/issues/258.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub generators: Vec<GenConfig>,
+    /// Available languages.
     #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub languages: Vec<LanguageConfig>,
+    /// Solutions.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub solutions: Vec<SolutionConfig>,
 }
 
 fn time_limit_default() -> f64 {
@@ -56,6 +67,7 @@ impl Default for CreoConfig {
             time_limit: 2.0,
             generators: vec![],
             languages: vec![cpp, python],
+            solutions: vec![],
         }
     }
 }

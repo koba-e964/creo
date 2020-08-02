@@ -8,20 +8,35 @@ use crate::run_util::{RunUtil, RunUtilExt};
 
 /// A trait that provides functions to handle a project directory.
 pub trait Project {
-    fn gen(&mut self, proj_dir: &str) -> Result<()>;
+    /// Generate input files from a generator.
+    fn gen(&mut self, _proj_dir: &str) -> Result<()> {
+        unreachable!();
+    }
+    /// Generate output files from input files and a reference solution.
+    fn refgen(&mut self, _proj_dir: &str) -> Result<()> {
+        unreachable!();
+    }
 }
 
-pub trait ProjectExt: IoUtil + RunUtil {}
+pub trait ProjectExt: IoUtil + RunUtil {
+    fn read_config(&mut self, proj: &Path) -> Result<CreoConfig> {
+        // Read the config file
+        let config_filepath = proj.join("creo.toml");
+        let mut file = self.open_file_for_read(&config_filepath)?;
+        let content = self.read_from_file(&mut file)?;
+        // TODO: better error handling (user-defined error type probably helps)
+        let config: CreoConfig = toml::from_str(&content).unwrap();
+
+        Ok(config)
+    }
+}
 
 impl<T: ProjectExt> Project for T {
     fn gen(&mut self, proj: &str) -> Result<()> {
         let proj = Path::new(proj);
 
         // Read the config file
-        let config_filepath = proj.join("creo.toml");
-        let mut file = self.open_file_for_read(&config_filepath)?;
-        let content = self.read_from_file(&mut file)?;
-        let config: CreoConfig = toml::from_str(&content).unwrap();
+        let config = self.read_config(proj)?;
         let lang_configs = config.languages;
         for gen in config.generators {
             let src = proj.join(&gen.path);
@@ -37,6 +52,13 @@ impl<T: ProjectExt> Project for T {
                 eprintln!("warning");
             }
         }
+        Ok(())
+    }
+    fn refgen(&mut self, proj_dir: &str) -> Result<()> {
+        let proj_dir = Path::new(proj_dir);
+
+        // Read the config file
+        let _config = self.read_config(proj_dir)?;
         Ok(())
     }
 }
