@@ -102,6 +102,7 @@ impl<T: ProjectExt> Project for T {
                 for infile in self.list_dir(&indir)? {
                     eprintln!("Generating {}", infile.to_str().unwrap());
                     let outfile = outdir.join(&infile);
+                    let infile = indir.join(&infile);
                     self.run_pipe(&cd, &outpath, &x.run, &infile, &outfile)?;
                 }
             } else {
@@ -129,7 +130,7 @@ mod tests {
     use super::*;
 
     struct MockProject {
-        processed: Vec<String>,
+        processed: Vec<(String, String)>,
     }
     impl IoUtil for MockProject {
         fn open_file_for_read(&self, _filepath: &Path) -> Result<Box<dyn std::io::Read>> {
@@ -176,9 +177,12 @@ is_reference_solution = true
             _exec: &Path,
             _run: &[String],
             infile: &Path,
-            _outfile: &Path,
+            outfile: &Path,
         ) -> Result<()> {
-            self.processed.push(infile.to_str().unwrap().to_owned());
+            self.processed.push((
+                infile.to_str().unwrap().to_owned(),
+                outfile.to_str().unwrap().to_owned(),
+            ));
             Ok(())
         }
     }
@@ -194,6 +198,12 @@ is_reference_solution = true
     fn refgen_project_works() {
         let mut project = MockProject { processed: vec![] };
         project.refgen(".").unwrap();
-        assert_eq!(project.processed, vec!["a".to_owned(), "b".to_owned()]);
+        assert_eq!(
+            project.processed,
+            vec![
+                ("in/a".to_owned(), "out/a".to_owned()),
+                ("in/b".to_owned(), "out/b".to_owned()),
+            ]
+        );
     }
 }
