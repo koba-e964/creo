@@ -98,6 +98,18 @@ impl<T: IoUtilExt> IoUtil for T {
         .clean();
         Ok(path)
     }
+    fn list_dir(&self, path: &Path) -> Result<Vec<PathBuf>> {
+        let mut result = vec![];
+        for entry in std::fs::read_dir(path)? {
+            let entry = entry?;
+            // We are interested in files only.
+            if entry.file_type()?.is_file() {
+                // We need to return relative paths.
+                result.push(entry.file_name().into());
+            }
+        }
+        Ok(result)
+    }
 }
 
 pub struct IoUtilImpl;

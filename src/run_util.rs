@@ -1,7 +1,7 @@
 use sha2::{Digest, Sha256};
-use std::io::{Error, Result};
+use std::io::{Error, Result, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use crate::io_util::{IoUtil, IoUtilExt};
 
@@ -122,13 +122,49 @@ impl<T: RunUtilExt> RunUtil for T {
     }
     fn run_pipe(
         &mut self,
-        _cd: &Path,
-        _exec: &Path,
-        _run: &[String],
-        _infile: &Path,
-        _outfile: &Path,
+        cd: &Path,
+        exec: &Path,
+        run: &[String],
+        infile: &Path,
+        outfile: &Path,
     ) -> Result<()> {
-        todo!()
+        let mut run = run.to_vec();
+        for v in run.iter_mut() {
+            if *v == "$OUT" {
+                *v = exec.to_str().unwrap().to_owned();
+            }
+        }
+        let prog = &run[0];
+        let args = run[1..].to_vec();
+        let mut child = Command::new(prog)
+            .args(&args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .current_dir(cd)
+            .spawn()?;
+        {
+            let mut file = self.open_file_for_read(infile)?;
+            let content = self.read_from_file(&mut file)?;
+            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+            stdin.write_all(content.as_bytes())?;
+        }
+        let output = child.wait_with_output()?;
+        if !output.status.success() {
+            if let Some(exit_code) = output.status.code() {
+                return Err(Error::from_raw_os_error(exit_code));
+            } else {
+                return Err(Error::from_raw_os_error(128));
+            }
+        }
+
+        let stdout = output.stdout;
+        {
+            // TODO better name
+            let mut file = self.create_file_if_nonexistent(&outfile)?;
+            // TODO write arbitrary byte sequences
+            self.write_str_to_file(&mut file, &String::from_utf8(stdout).unwrap())?;
+        }
+        Ok(())
     }
 }
 

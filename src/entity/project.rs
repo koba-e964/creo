@@ -1,6 +1,6 @@
 use path_clean::PathClean;
 use std::io::{Error, ErrorKind, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::entity::config::CreoConfig;
 use crate::entity::testcase::TestcaseConfig;
@@ -69,8 +69,8 @@ impl<T: ProjectExt> Project for T {
         let config = self.read_config(proj_dir)?;
         let lang_configs = config.languages;
         let TestcaseConfig { indir, outdir } = config.testcase_config;
-        let indir = PathBuf::from(indir);
-        let outdir = PathBuf::from(outdir);
+        let indir = proj_dir.join(indir);
+        let outdir = proj_dir.join(outdir);
 
         // Do we have exactly one model solution?
         let model_solution_count = config
@@ -201,8 +201,8 @@ is_reference_solution = true
         assert_eq!(
             project.processed,
             vec![
-                ("in/a".to_owned(), "out/a".to_owned()),
-                ("in/b".to_owned(), "out/b".to_owned()),
+                ("./in/a".to_owned(), "./out/a".to_owned()),
+                ("./in/b".to_owned(), "./out/b".to_owned()),
             ]
         );
     }

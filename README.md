@@ -77,6 +77,11 @@ Available options are:
 ### `creo gen`
 `creo gen PROJECT` will generate input data in `PROJECT`.
 
+### `creo refgen`
+`creo refgen PROJECT` will generate output data in `PROJECT`.
+Available options are:
+- `--skip-in`: skip generating input files. This may be useful for scripting.
+
 ### `creo test`
 `creo test` will test all solutions in `sol/`, checking if they behave as they are intended.
 
