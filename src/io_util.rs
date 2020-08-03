@@ -36,6 +36,11 @@ pub trait IoUtil {
     fn to_absolute(&self, path: &Path) -> Result<PathBuf> {
         unreachable!()
     }
+    /// List a directory. Return a list of paths relative to `path`.
+    #[allow(unused)]
+    fn list_dir(&self, path: &Path) -> Result<Vec<PathBuf>> {
+        unreachable!()
+    }
 }
 
 pub trait IoUtilExt {}

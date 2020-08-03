@@ -11,6 +11,9 @@ pub struct SolutionConfig {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_ac")]
     pub expected_verdict: Verdict,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub is_reference_solution: bool,
 }
 
 /// Judge's verdict.
@@ -39,6 +42,10 @@ impl Default for Verdict {
     }
 }
 
+fn is_false(x: &bool) -> bool {
+    !x
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -65,9 +72,11 @@ mod tests {
             path: "test".to_owned(),
             language_name: "C++".to_owned(),
             expected_verdict: Verdict::AC,
+            is_reference_solution: false,
         })
         .unwrap();
         // expected_verdict is skipped because it is AC.
+        // is_reference_solution is skipped because it is false.
         let expected = r#"path = "test"
 language_name = "C++"
 "#;
@@ -76,12 +85,15 @@ language_name = "C++"
             path: "test".to_owned(),
             language_name: "Rust".to_owned(),
             expected_verdict: Verdict::WA,
+            is_reference_solution: true,
         })
         .unwrap();
         // expected_verdict is serialized because it is not AC.
+        // is_reference_solution is serialized because it is true.
         let expected = r#"path = "test"
 language_name = "Rust"
 expected_verdict = "wa"
+is_reference_solution = true
 "#;
         assert_eq!(ser, expected);
     }

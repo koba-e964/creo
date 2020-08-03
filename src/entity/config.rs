@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::gen::GenConfig;
 use super::sol::SolutionConfig;
+use super::testcase::TestcaseConfig;
 
 /// Config file for creo.
 /// Should be placed at creo.toml
@@ -23,6 +24,9 @@ pub struct CreoConfig {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub solutions: Vec<SolutionConfig>,
+    /// Configuration for input/output files.
+    #[serde(default)]
+    pub testcase_config: TestcaseConfig,
 }
 
 fn time_limit_default() -> f64 {
@@ -63,11 +67,16 @@ impl Default for CreoConfig {
                 .collect(),
             run: vec!["python3".to_owned(), "$OUT".to_owned()],
         };
+        let testcase_config = TestcaseConfig {
+            indir: "in".to_owned(),
+            outdir: "out".to_owned(),
+        };
         Self {
             time_limit: 2.0,
             generators: vec![],
             languages: vec![cpp, python],
             solutions: vec![],
+            testcase_config,
         }
     }
 }

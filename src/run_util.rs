@@ -19,12 +19,25 @@ pub trait RunUtil {
     }
     /// Runs an executable with an input file.
     #[allow(unused)]
-    fn run_with_input(&mut self, cd: &Path, exec: &Path, infile: &Path) -> Result<()> {
+    fn run_with_input(
+        &mut self,
+        cd: &Path,
+        exec: &Path,
+        run: &[String],
+        infile: &Path,
+    ) -> Result<()> {
         unreachable!()
     }
     /// Runs an executable with an input file and write its output to a file.
     #[allow(unused)]
-    fn run_pipe(&mut self, cd: &Path, exec: &Path, infile: &Path, outfile: &Path) -> Result<()> {
+    fn run_pipe(
+        &mut self,
+        cd: &Path,
+        exec: &Path,
+        run: &[String],
+        infile: &Path,
+        outfile: &Path,
+    ) -> Result<()> {
         unreachable!()
     }
 }
@@ -98,13 +111,20 @@ impl<T: RunUtilExt> RunUtil for T {
         }
         Ok(())
     }
-    fn run_with_input(&mut self, _cd: &Path, _exec: &Path, _infile: &Path) -> Result<()> {
+    fn run_with_input(
+        &mut self,
+        _cd: &Path,
+        _exec: &Path,
+        _run: &[String],
+        _infile: &Path,
+    ) -> Result<()> {
         todo!()
     }
     fn run_pipe(
         &mut self,
         _cd: &Path,
         _exec: &Path,
+        _run: &[String],
         _infile: &Path,
         _outfile: &Path,
     ) -> Result<()> {
