@@ -41,6 +41,11 @@ pub trait IoUtil {
     fn list_dir(&self, path: &Path) -> Result<Vec<PathBuf>> {
         unreachable!()
     }
+    /// Remove directory after recursively deleting its contents.
+    #[allow(unused)]
+    fn remove_dir_all(&self, path: &Path) -> Result<()> {
+        unreachable!()
+    }
 }
 
 pub trait IoUtilExt {}
@@ -109,6 +114,9 @@ impl<T: IoUtilExt> IoUtil for T {
             }
         }
         Ok(result)
+    }
+    fn remove_dir_all(&self, path: &Path) -> Result<()> {
+        std::fs::remove_dir_all(path)
     }
 }
 

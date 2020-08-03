@@ -86,6 +86,9 @@ impl<T: ProjectExt> Project for T {
             return Err(e);
         }
 
+        // Delete all files in outdir
+        self.remove_dir_all(&outdir)?;
+
         for sol in config.solutions {
             if !sol.is_reference_solution {
                 continue;
@@ -160,6 +163,9 @@ is_reference_solution = true
         }
         fn list_dir(&self, _path: &Path) -> Result<Vec<PathBuf>> {
             Ok(vec!["a".into(), "b".into()])
+        }
+        fn remove_dir_all(&self, _path: &Path) -> Result<()> {
+            Ok(())
         }
     }
     impl RunUtil for MockProject {
