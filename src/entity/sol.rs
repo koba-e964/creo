@@ -8,6 +8,8 @@ pub struct SolutionConfig {
     /// In which language is theis solution written?
     pub language_name: String,
     /// What kind of verdict should this solution receive?
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_ac")]
     pub expected_verdict: Verdict,
 }
 
@@ -25,6 +27,16 @@ pub enum Verdict {
     MLE,
     /// Query Limit Exceeded. The solution issued queries more than predetermined query limit.
     QLE,
+}
+
+fn is_ac(x: &Verdict) -> bool {
+    x == &Verdict::AC
+}
+
+impl Default for Verdict {
+    fn default() -> Self {
+        Verdict::AC
+    }
 }
 
 #[cfg(test)]
@@ -45,5 +57,32 @@ mod tests {
         assert_eq!(de, Verdict::AC);
         let de: Verdict = toml::from_str("\"wa\"").unwrap();
         assert_eq!(de, Verdict::WA);
+    }
+
+    #[test]
+    fn solution_serialize_work() {
+        let ser = toml::to_string(&SolutionConfig {
+            path: "test".to_owned(),
+            language_name: "C++".to_owned(),
+            expected_verdict: Verdict::AC,
+        })
+        .unwrap();
+        // expected_verdict is skipped because it is AC.
+        let expected = r#"path = "test"
+language_name = "C++"
+"#;
+        assert_eq!(ser, expected);
+        let ser = toml::to_string(&SolutionConfig {
+            path: "test".to_owned(),
+            language_name: "Rust".to_owned(),
+            expected_verdict: Verdict::WA,
+        })
+        .unwrap();
+        // expected_verdict is serialized because it is not AC.
+        let expected = r#"path = "test"
+language_name = "Rust"
+expected_verdict = "wa"
+"#;
+        assert_eq!(ser, expected);
     }
 }
