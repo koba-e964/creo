@@ -1,8 +1,8 @@
 use super::Command;
 use clap::{App, Arg, ArgMatches, SubCommand};
-use std::io::Result;
 use std::path::Path;
 
+use crate::error::Result;
 use crate::io_util::{IoUtil, IoUtilImpl};
 
 pub struct InitCommand;
@@ -34,9 +34,9 @@ fn initialize_project(dest: &str, io_util: &mut dyn IoUtil) -> Result<()> {
     // Write to the config file
     let config_filepath = dest.join("creo.toml");
     let config = crate::entity::config::CreoConfig::default();
-    println!("{}", toml::to_string(&config).unwrap());
+    println!("{}", toml::to_string(&config)?);
     let mut file = io_util.create_file_if_nonexistent(&config_filepath)?;
-    io_util.write_str_to_file(&mut file, &toml::to_string(&config).unwrap())?;
+    io_util.write_str_to_file(&mut file, &toml::to_string(&config)?)?;
 
     // Create subdirectories
     let subdirs = vec!["etc", "sol", "in", "out", "task"];

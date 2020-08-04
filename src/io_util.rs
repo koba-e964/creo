@@ -1,7 +1,9 @@
 use path_clean::PathClean;
 use std::fs::OpenOptions;
-use std::io::{Error, ErrorKind, Read, Result, Write};
+use std::io::{Error as IOError, ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
+
+use crate::error::Result;
 
 pub trait IoUtil {
     /// Create a file if a file with the same name doesn't exist.
@@ -79,13 +81,15 @@ impl<T: IoUtilExt> IoUtil for T {
             std::fs::create_dir(path)?;
             return Ok(());
         }
-        Err(Error::new(
+        Err(IOError::new(
             ErrorKind::Other,
             format!("not a directory: {}", path.display()),
-        ))
+        )
+        .into())
     }
     fn write_str_to_file(&self, file: &mut dyn Write, s: &str) -> Result<()> {
-        write!(file, "{}", s)
+        write!(file, "{}", s)?;
+        Ok(())
     }
     fn read_from_file(&self, file: &mut dyn Read) -> Result<String> {
         let mut buf = vec![];
@@ -120,7 +124,7 @@ impl<T: IoUtilExt> IoUtil for T {
             if e.kind() == ErrorKind::NotFound {
                 return Ok(());
             } else {
-                return Err(e);
+                return Err(e.into());
             }
         }
         Ok(())

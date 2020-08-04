@@ -1,9 +1,9 @@
 use super::Command;
 use clap::{App, Arg, ArgMatches, SubCommand};
-use std::io::Result;
 use std::path::Path;
 
 use crate::entity::config::CreoConfig;
+use crate::error::Result;
 use crate::io_util::{IoUtil, IoUtilImpl};
 
 pub struct CheckCommand;
@@ -33,7 +33,7 @@ fn check_project(proj: &str, io_util: &mut dyn IoUtil) -> Result<()> {
     let mut file = io_util.open_file_for_read(&config_filepath)?;
     let content = io_util.read_from_file(&mut file)?;
     println!("{}", content);
-    let config: CreoConfig = toml::from_str(&content).unwrap();
+    let config: CreoConfig = toml::from_str(&content)?;
     eprintln!("config = {:?}", config);
     Ok(())
 }

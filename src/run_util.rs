@@ -1,8 +1,9 @@
 use sha2::{Digest, Sha256};
-use std::io::{Error, Result, Write};
+use std::io::{Error as IOError, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use crate::error::Result;
 use crate::io_util::{IoUtil, IoUtilExt};
 
 /// Utility trait for compiling/running executables.
@@ -85,9 +86,9 @@ impl<T: RunUtilExt> RunUtil for T {
         if !status.success() {
             eprintln!("compile status = {}", status);
             if let Some(exit_code) = status.code() {
-                return Err(Error::from_raw_os_error(exit_code));
+                return Err(IOError::from_raw_os_error(exit_code).into());
             } else {
-                return Err(Error::from_raw_os_error(128));
+                return Err(IOError::from_raw_os_error(128).into());
             }
         }
         Ok(outpath)
@@ -104,9 +105,9 @@ impl<T: RunUtilExt> RunUtil for T {
         let status = Command::new(prog).args(&args).current_dir(cd).status()?;
         if !status.success() {
             if let Some(exit_code) = status.code() {
-                return Err(Error::from_raw_os_error(exit_code));
+                return Err(IOError::from_raw_os_error(exit_code).into());
             } else {
-                return Err(Error::from_raw_os_error(128));
+                return Err(IOError::from_raw_os_error(128).into());
             }
         }
         Ok(())
@@ -151,9 +152,9 @@ impl<T: RunUtilExt> RunUtil for T {
         let output = child.wait_with_output()?;
         if !output.status.success() {
             if let Some(exit_code) = output.status.code() {
-                return Err(Error::from_raw_os_error(exit_code));
+                return Err(IOError::from_raw_os_error(exit_code).into());
             } else {
-                return Err(Error::from_raw_os_error(128));
+                return Err(IOError::from_raw_os_error(128).into());
             }
         }
 

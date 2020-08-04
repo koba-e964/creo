@@ -32,11 +32,12 @@ impl<P: Project> Command for GenCommand<P> {
 mod tests {
     use super::*;
 
+    use crate::error::Result;
     use clap::{App, ErrorKind};
 
     struct MockProject;
     impl Project for MockProject {
-        fn gen(&mut self, _proj_dir: &str) -> std::io::Result<()> {
+        fn gen(&mut self, _proj_dir: &str) -> Result<()> {
             Ok(())
         }
     }

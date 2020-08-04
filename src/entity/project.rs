@@ -1,9 +1,9 @@
 use path_clean::PathClean;
-use std::io::{Error, ErrorKind, Result};
 use std::path::Path;
 
 use crate::entity::config::CreoConfig;
 use crate::entity::testcase::TestcaseConfig;
+use crate::error::{Error, Result};
 use crate::io_util::{IoUtil, IoUtilExt};
 use crate::run_util::{RunUtil, RunUtilExt};
 
@@ -28,7 +28,7 @@ pub trait ProjectExt: IoUtil + RunUtil {
         let mut file = self.open_file_for_read(&config_filepath)?;
         let content = self.read_from_file(&mut file)?;
         // TODO: better error handling (user-defined error type probably helps)
-        let config: CreoConfig = toml::from_str(&content).unwrap();
+        let config: CreoConfig = toml::from_str(&content)?;
 
         Ok(config)
     }
@@ -60,10 +60,9 @@ impl<T: ProjectExt> Project for T {
                 self.run_once(&cd, &outpath, &x.run)?;
             } else {
                 eprintln!("warning");
-                let e = Error::new(
-                    ErrorKind::Other,
-                    format!("language not found: {}", gen.language_name),
-                );
+                let e = Error::ConfInvalid {
+                    description: format!("language not found: {}", gen.language_name),
+                };
                 return Err(e);
             }
         }
@@ -86,10 +85,9 @@ impl<T: ProjectExt> Project for T {
             .filter(|&solution| solution.is_reference_solution)
             .count();
         if model_solution_count != 1 {
-            let e = Error::new(
-                ErrorKind::Other,
-                format!("#model solutions is not one: {}", model_solution_count),
-            );
+            let e = Error::ConfInvalid {
+                description: format!("#model solutions is not one: {}", model_solution_count),
+            };
             return Err(e);
         }
 
@@ -117,10 +115,9 @@ impl<T: ProjectExt> Project for T {
                 }
             } else {
                 eprintln!("warning");
-                let e = Error::new(
-                    ErrorKind::Other,
-                    format!("language not found: {}", sol.language_name),
-                );
+                let e = Error::ConfInvalid {
+                    description: format!("language not found: {}", sol.language_name),
+                };
                 return Err(e);
             }
         }
@@ -164,6 +161,9 @@ language_name = "C++"
 is_reference_solution = true
 "#
             .to_string())
+        }
+        fn mkdir_p(&mut self, _path: &Path) -> Result<()> {
+            Ok(())
         }
         fn to_absolute(&self, _path: &Path) -> Result<PathBuf> {
             Ok("gen-absolute".into())
