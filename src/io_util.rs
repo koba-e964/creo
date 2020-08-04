@@ -116,7 +116,14 @@ impl<T: IoUtilExt> IoUtil for T {
         Ok(result)
     }
     fn remove_dir_all(&self, path: &Path) -> Result<()> {
-        std::fs::remove_dir_all(path)
+        if let Err(e) = std::fs::remove_dir_all(path) {
+            if e.kind() == ErrorKind::NotFound {
+                return Ok(());
+            } else {
+                return Err(e);
+            }
+        }
+        Ok(())
     }
 }
 

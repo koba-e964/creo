@@ -41,6 +41,13 @@ impl<T: ProjectExt> Project for T {
         // Read the config file
         let config = self.read_config(proj)?;
         let lang_configs = config.languages;
+        let TestcaseConfig { indir, .. } = config.testcase_config;
+        let indir = proj.join(indir);
+
+        // Delete all files in indir
+        self.remove_dir_all(&indir)?;
+        self.mkdir_p(&indir)?;
+
         for gen in config.generators {
             let src = proj.join(&gen.path);
             let cd = src.join("..").clean();
