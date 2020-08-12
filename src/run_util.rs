@@ -1,5 +1,5 @@
 use sha2::{Digest, Sha256};
-use std::io::{Error as IOError, Write};
+use std::io::{Error as IOError, ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -85,11 +85,16 @@ impl<T: RunUtilExt> RunUtil for T {
         let status = Command::new(prog).current_dir(cd).args(&args).status()?;
         if !status.success() {
             eprintln!("compile status = {}", status);
-            if let Some(exit_code) = status.code() {
-                return Err(IOError::from_raw_os_error(exit_code).into());
-            } else {
-                return Err(IOError::from_raw_os_error(128).into());
-            }
+            let err = IOError::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "Compiling {} failed (cd = {}, options = {:?})",
+                    src.display(),
+                    cd.display(),
+                    compile
+                ),
+            );
+            return Err(err.into());
         }
         Ok(outpath)
     }
@@ -104,11 +109,16 @@ impl<T: RunUtilExt> RunUtil for T {
         let args = run[1..].to_vec();
         let status = Command::new(prog).args(&args).current_dir(cd).status()?;
         if !status.success() {
-            if let Some(exit_code) = status.code() {
-                return Err(IOError::from_raw_os_error(exit_code).into());
-            } else {
-                return Err(IOError::from_raw_os_error(128).into());
-            }
+            let err = IOError::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "Executing {} failed (cd = {}, options = {:?})",
+                    exec.display(),
+                    cd.display(),
+                    run
+                ),
+            );
+            return Err(err.into());
         }
         Ok(())
     }
