@@ -16,20 +16,24 @@ pub struct SolutionConfig {
     pub is_reference_solution: bool,
 }
 
-/// Judge's verdict.
-#[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Debug)]
+/// Judge's verdict. Bigger it is, worse it is.
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum Verdict {
     /// ACcepted. The solution is correct.
     AC,
-    /// Wrong Answer. The solution's output didn't match judge's output.
-    WA,
     /// Time Limit Exceeded. The solution didn't finish before the predetermined time limit.
     TLE,
+    /// Wrong Answer. The solution's output didn't match judge's output.
+    WA,
+    /// Runtime Error.
+    RE,
     /// Memory Limit Exceeded. The solution used memory more than the limit.
     MLE,
     /// Query Limit Exceeded. The solution issued queries more than predetermined query limit.
     QLE,
+    /// Internal Error. It is the fault of the judge, not of the solution.
+    IE,
 }
 
 fn is_ac(x: &Verdict) -> bool {

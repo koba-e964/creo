@@ -18,7 +18,7 @@ pub trait RunUtil {
     fn run_once(&mut self, cd: &Path, exec: &Path, run: &[String]) -> Result<()> {
         unreachable!()
     }
-    /// Runs an executable with an input file.
+    /// Runs an executable with an input file, returning its output.
     #[allow(unused)]
     fn run_with_input(
         &mut self,
@@ -26,7 +26,7 @@ pub trait RunUtil {
         exec: &Path,
         run: &[String],
         infile: &Path,
-    ) -> Result<()> {
+    ) -> Result<Vec<u8>> {
         unreachable!()
     }
     /// Runs an executable with an input file and write its output to a file.
@@ -124,21 +124,11 @@ impl<T: RunUtilExt> RunUtil for T {
     }
     fn run_with_input(
         &mut self,
-        _cd: &Path,
-        _exec: &Path,
-        _run: &[String],
-        _infile: &Path,
-    ) -> Result<()> {
-        todo!()
-    }
-    fn run_pipe(
-        &mut self,
         cd: &Path,
         exec: &Path,
         run: &[String],
         infile: &Path,
-        outfile: &Path,
-    ) -> Result<()> {
+    ) -> Result<Vec<u8>> {
         let mut run = run.to_vec();
         for v in run.iter_mut() {
             if *v == "$OUT" {
@@ -161,14 +151,31 @@ impl<T: RunUtilExt> RunUtil for T {
         }
         let output = child.wait_with_output()?;
         if !output.status.success() {
-            if let Some(exit_code) = output.status.code() {
-                return Err(IOError::from_raw_os_error(exit_code).into());
-            } else {
-                return Err(IOError::from_raw_os_error(128).into());
-            }
+            eprintln!("run status = {}", output.status);
+            let err = IOError::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "Running {} failed (cd = {}, options = {:?})",
+                    exec.display(),
+                    cd.display(),
+                    run,
+                ),
+            );
+            return Err(err.into());
         }
 
         let stdout = output.stdout;
+        Ok(stdout)
+    }
+    fn run_pipe(
+        &mut self,
+        cd: &Path,
+        exec: &Path,
+        run: &[String],
+        infile: &Path,
+        outfile: &Path,
+    ) -> Result<()> {
+        let stdout = self.run_with_input(cd, exec, run, infile)?;
         {
             // TODO better name
             let mut file = self.create_file_if_nonexistent(&outfile)?;

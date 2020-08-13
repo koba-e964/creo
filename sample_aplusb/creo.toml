@@ -14,3 +14,13 @@ run = ["$OUT"]
 path = "sol.cpp"
 language_name = "C++"
 is_reference_solution = true
+
+[[solutions]]
+path = "wa.cpp"
+language_name = "C++"
+expected_verdict = "wa"
+
+[[solutions]]
+path = "re.cpp"
+language_name = "C++"
+expected_verdict = "re"

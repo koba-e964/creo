@@ -2,11 +2,11 @@ use path_clean::PathClean;
 use std::path::Path;
 
 use crate::entity::config::CreoConfig;
+use crate::entity::sol::Verdict;
 use crate::entity::testcase::TestcaseConfig;
 use crate::error::{Error, Result};
 use crate::io_util::{IoUtil, IoUtilExt};
 use crate::run_util::{RunUtil, RunUtilExt};
-
 /// A trait that provides functions to handle a project directory.
 pub trait Project {
     /// Generate input files from a generator.
@@ -17,6 +17,11 @@ pub trait Project {
     /// Generate output files from input files and a reference solution.
     #[allow(unused)]
     fn refgen(&mut self, proj_dir: &str) -> Result<()> {
+        unreachable!();
+    }
+    /// Execute all solutions and check if their output matches expected output.
+    #[allow(unused)]
+    fn test(&mut self, proj_dir: &str) -> Result<()> {
         unreachable!();
     }
 }
@@ -31,6 +36,25 @@ pub trait ProjectExt: IoUtil + RunUtil {
         let config: CreoConfig = toml::from_str(&content)?;
 
         Ok(config)
+    }
+
+    // Given the result of execution and the expected output file, find the verdict.
+    fn get_verdict(&mut self, result: &Result<Vec<u8>>, outfile: &Path) -> Result<Verdict> {
+        match result {
+            Ok(result) => {
+                let mut file = self.open_file_for_read(outfile)?;
+                let content = self.read_from_file(&mut file).map(|x| x.into_bytes())?;
+                if &content == result {
+                    Ok(Verdict::AC)
+                } else {
+                    Ok(Verdict::WA)
+                }
+            }
+            Err(_e) => {
+                // TODO: We need to inspect what kind of error happened.
+                Ok(Verdict::RE)
+            }
+        }
     }
 }
 
@@ -123,6 +147,59 @@ impl<T: ProjectExt> Project for T {
         }
         Ok(())
     }
+    fn test(&mut self, proj_dir: &str) -> Result<()> {
+        let proj_dir = Path::new(proj_dir);
+
+        // Read the config file
+        let config = self.read_config(proj_dir)?;
+        let lang_configs = config.languages;
+        let TestcaseConfig { indir, outdir } = config.testcase_config;
+        let indir = proj_dir.join(indir);
+        let outdir = proj_dir.join(outdir);
+
+        for sol in config.solutions {
+            let src = proj_dir.join(&sol.path);
+            let cd = src.join("..").clean();
+            let cd = self.to_absolute(&cd)?;
+            let lang_config = lang_configs
+                .iter()
+                .find(|&c| c.language_name == sol.language_name);
+            if let Some(x) = lang_config {
+                let outpath = self.compile(&cd, &self.to_absolute(&src)?, &x.compile)?;
+                // For all files in `indir`, generate the counterpart in `outdir`.
+                let mut overall_verdict = Verdict::AC;
+                for infile in self.list_dir(&indir)? {
+                    eprintln!("Running {}", infile.to_str().unwrap());
+                    let outfile = outdir.join(&infile);
+                    let infile = indir.join(&infile);
+
+                    let result = self.run_with_input(&cd, &outpath, &x.run, &infile);
+                    let verdict = self.get_verdict(&result, &outfile)?;
+                    overall_verdict = std::cmp::max(overall_verdict, verdict);
+                }
+                if sol.expected_verdict != overall_verdict {
+                    return Err(Error::VerdictMismatch {
+                        expected: sol.expected_verdict,
+                        actual: overall_verdict,
+                    });
+                } else {
+                    eprintln!(
+                        "Testing {} complete (result = expected = {:?})",
+                        src.display(),
+                        sol.expected_verdict
+                    )
+                }
+            } else {
+                eprintln!("warning");
+                let e = Error::ConfInvalid {
+                    description: format!("language not found: {}", sol.language_name),
+                };
+                return Err(e);
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct ProjectImpl;
@@ -136,6 +213,7 @@ mod tests {
 
     use super::*;
 
+    // TODO: better testing, especially better mocking (such as obtaining multiple files' content by read_from_file)
     struct MockProject {
         processed: Vec<(String, String)>,
     }
@@ -184,6 +262,15 @@ is_reference_solution = true
             assert_eq!(exec, PathBuf::from("outpath"));
             Ok(())
         }
+        fn run_with_input(
+            &mut self,
+            _cd: &Path,
+            _exec: &Path,
+            _run: &[String],
+            _infile: &Path,
+        ) -> Result<Vec<u8>> {
+            Ok((b"aa" as &[u8]).to_owned())
+        }
         fn run_pipe(
             &mut self,
             _cd: &Path,
@@ -218,5 +305,20 @@ is_reference_solution = true
                 ("./in/b".to_owned(), "./out/b".to_owned()),
             ]
         );
+    }
+
+    #[test]
+    fn test_project_works() {
+        let mut project = MockProject { processed: vec![] };
+        // TODO: explain why RE != AC is returned
+        let result = project.test(".");
+        // We use a pattern matching because Error can't implement PartialEq
+        // (because of std::io::Error, which doesn't implement PartialEq)
+        if let Err(Error::VerdictMismatch { expected, actual }) = result {
+            assert_eq!(expected, Verdict::AC);
+            assert_eq!(actual, Verdict::WA);
+        } else {
+            assert!(false, "unreachable: the assertion above does not hold");
+        }
     }
 }
