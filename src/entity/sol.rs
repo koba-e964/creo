@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct SolutionConfig {
     /// Path to the solution file.
     pub path: String,
-    /// In which language is theis solution written?
+    /// In which language is this solution written?
     pub language_name: String,
     /// What kind of verdict should this solution receive?
     #[serde(default)]
