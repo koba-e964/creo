@@ -370,7 +370,7 @@ is_reference_solution = true
         let desc = e.to_string();
         // We want an error message that indicates there are 2 reference solutions.
         assert!(desc.contains("reference solution"), "desc = {}", desc);
-        assert!(desc.contains("2"), "desc = {}", desc);
+        assert!(desc.contains('2'), "desc = {}", desc);
     }
 
     #[test]
@@ -423,7 +423,7 @@ is_reference_solution = true
             assert_eq!(expected, Verdict::AC);
             assert_eq!(actual, Verdict::WA);
         } else {
-            assert!(false, "unreachable: the assertion above does not hold");
+            unreachable!("unreachable: the assertion above does not hold");
         }
     }
 }
