@@ -7,7 +7,9 @@ use creo::entity::project::ProjectImpl;
 fn main() {
     let mut commands = [
         &mut init::InitCommand as &mut dyn Command,
-        &mut check::CheckCommand,
+        &mut check::CheckCommand {
+            project: ProjectImpl,
+        },
         &mut gen::GenCommand {
             project: ProjectImpl,
         },

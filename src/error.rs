@@ -8,7 +8,7 @@ pub enum Error {
         #[source]
         std::io::Error,
     ),
-    #[error("Config file has invalid configuration")]
+    #[error("Config file has invalid configuration: {description}")]
     ConfInvalid { description: String },
     #[error("Verdict is not as expected (expected = {expected:?}, actual = {actual:?})")]
     VerdictMismatch { expected: Verdict, actual: Verdict },

@@ -9,6 +9,11 @@ use crate::io_util::{IoUtil, IoUtilExt};
 use crate::run_util::{RunUtil, RunUtilExt};
 /// A trait that provides functions to handle a project directory.
 pub trait Project {
+    /// Check if the config file is valid.
+    #[allow(unused)]
+    fn check(&mut self, proj_dir: &str) -> Result<()> {
+        unreachable!();
+    }
     /// Generate input files from a generator.
     #[allow(unused)]
     fn gen(&mut self, proj_dir: &str) -> Result<()> {
@@ -59,6 +64,16 @@ pub trait ProjectExt: IoUtil + RunUtil {
 }
 
 impl<T: ProjectExt> Project for T {
+    fn check(&mut self, proj_dir: &str) -> Result<()> {
+        let proj = Path::new(proj_dir);
+
+        // Read the config file
+        let config = self.read_config(proj)?;
+        eprintln!("config = {:?}", config);
+
+        check_reference_solution(&config)?;
+        Ok(())
+    }
     fn gen(&mut self, proj: &str) -> Result<()> {
         let proj = Path::new(proj);
 
@@ -102,15 +117,18 @@ impl<T: ProjectExt> Project for T {
         let indir = proj_dir.join(indir);
         let outdir = proj_dir.join(outdir);
 
-        // Do we have exactly one model solution?
-        let model_solution_count = config
+        // Do we have exactly one reference solution?
+        let reference_solution_count = config
             .solutions
             .iter()
             .filter(|&solution| solution.is_reference_solution)
             .count();
-        if model_solution_count != 1 {
+        if reference_solution_count != 1 {
             let e = Error::ConfInvalid {
-                description: format!("#model solutions is not one: {}", model_solution_count),
+                description: format!(
+                    "#reference solutions is not one: {}",
+                    reference_solution_count
+                ),
             };
             return Err(e);
         }
@@ -208,6 +226,39 @@ impl IoUtilExt for ProjectImpl {}
 impl RunUtilExt for ProjectImpl {}
 impl ProjectExt for ProjectImpl {}
 
+// Check if there is at most one reference solution.
+fn check_reference_solution(config: &CreoConfig) -> Result<()> {
+    let reference_solution_count = config
+        .solutions
+        .iter()
+        .filter(|&solution| solution.is_reference_solution)
+        .count();
+    if reference_solution_count > 1 {
+        let e = Error::ConfInvalid {
+            description: format!(
+                "#reference solutions is not <= 1: {}",
+                reference_solution_count
+            ),
+        };
+        return Err(e);
+    }
+
+    for sol in &config.solutions {
+        if !sol.is_reference_solution {
+            continue;
+        }
+        if sol.expected_verdict != Verdict::AC {
+            return Err(Error::ConfInvalid {
+                description: format!(
+                    "the reference solution does not satisfy expected_verdict = AC: got {:?}",
+                    sol.expected_verdict,
+                ),
+            });
+        }
+    }
+    Ok(())
+}
+
 mod tests {
     use std::path::PathBuf;
 
@@ -287,6 +338,60 @@ is_reference_solution = true
         }
     }
     impl ProjectExt for MockProject {}
+
+    #[test]
+    fn check_reference_solution_works() {
+        use crate::entity::sol::{SolutionConfig, Verdict};
+        let mut config = CreoConfig::default();
+        config.solutions = vec![SolutionConfig {
+            path: "".to_owned(),
+            language_name: "".to_owned(),
+            expected_verdict: Verdict::AC,
+            is_reference_solution: true,
+        }];
+        check_reference_solution(&config).unwrap();
+    }
+
+    #[test]
+    fn check_reference_solution_fails_if_two_reference_solutions_exist() {
+        use crate::entity::sol::{SolutionConfig, Verdict};
+        let mut config = CreoConfig::default();
+        config.solutions = vec![
+            SolutionConfig {
+                path: "".to_owned(),
+                language_name: "".to_owned(),
+                expected_verdict: Verdict::AC,
+                is_reference_solution: true,
+            };
+            2
+        ];
+
+        let e = check_reference_solution(&config).unwrap_err();
+        let desc = e.to_string();
+        // We want an error message that indicates there are 2 reference solutions.
+        assert!(desc.contains("reference solution"), "desc = {}", desc);
+        assert!(desc.contains("2"), "desc = {}", desc);
+    }
+
+    #[test]
+    fn check_reference_solution_fails_if_reference_solutions_expected_verdict_is_not_ac() {
+        use crate::entity::sol::{SolutionConfig, Verdict};
+        let mut config = CreoConfig::default();
+        config.solutions = vec![SolutionConfig {
+            path: "".to_owned(),
+            language_name: "".to_owned(),
+            expected_verdict: Verdict::WA,
+            is_reference_solution: true,
+        }];
+
+        let e = check_reference_solution(&config).unwrap_err();
+        let desc = e.to_string();
+        // We want an error message that indicates the reference solution should have expected_verdict AC,
+        // but in fact it was WA.
+        assert!(desc.contains("reference solution"), "desc = {}", desc);
+        assert!(desc.contains("WA"), "desc = {}", desc);
+        assert!(desc.contains("AC"), "desc = {}", desc);
+    }
 
     #[test]
     fn gen_project_works() {
