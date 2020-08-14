@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::gen::GenConfig;
 use super::sol::SolutionConfig;
 use super::testcase::TestcaseConfig;
+use super::val::ValidatorConfig;
 
 /// Config file for creo.
 /// Should be placed at creo.toml
@@ -24,6 +25,10 @@ pub struct CreoConfig {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub solutions: Vec<SolutionConfig>,
+    /// Validators.
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub validators: Vec<ValidatorConfig>,
     /// Configuration for input/output files.
     #[serde(default)]
     pub testcase_config: TestcaseConfig,
@@ -76,6 +81,7 @@ impl Default for CreoConfig {
             generators: vec![],
             languages: vec![cpp, python],
             solutions: vec![],
+            validators: vec![],
             testcase_config,
         }
     }

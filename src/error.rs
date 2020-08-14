@@ -1,6 +1,7 @@
 use crate::entity::sol::Verdict;
 
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum Error {
     #[error("I/O error occurred")]
     IOError(
@@ -24,6 +25,12 @@ pub enum Error {
         #[source]
         toml::de::Error,
     ),
+    #[error("Validation failed: validator = {validator}, infile = {infile}")]
+    ValidationFailed {
+        validator: String,
+        infile: String,
+        inner: Box<dyn std::error::Error + 'static>,
+    },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

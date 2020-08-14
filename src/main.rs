@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate clap;
 use clap::App;
-use creo::cmd::{check, gen, init, refgen, test, Command};
+use creo::cmd::{check, gen, init, refgen, test, val, Command};
 use creo::entity::project::ProjectImpl;
 
 fn main() {
@@ -17,6 +17,9 @@ fn main() {
             project: ProjectImpl,
         },
         &mut test::TestCommand {
+            project: ProjectImpl,
+        },
+        &mut val::ValCommand {
             project: ProjectImpl,
         },
     ];

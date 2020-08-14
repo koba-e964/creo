@@ -29,6 +29,11 @@ pub trait Project {
     fn test(&mut self, proj_dir: &str) -> Result<()> {
         unreachable!();
     }
+    /// Validate all input files.
+    #[allow(unused)]
+    fn val(&mut self, proj_dir: &str) -> Result<()> {
+        unreachable!();
+    }
 }
 
 pub trait ProjectExt: IoUtil + RunUtil {
@@ -218,6 +223,65 @@ impl<T: ProjectExt> Project for T {
 
         Ok(())
     }
+
+    fn val(&mut self, proj_dir: &str) -> Result<()> {
+        let proj_dir = Path::new(proj_dir);
+
+        // Read the config file
+        let config = self.read_config(proj_dir)?;
+        let lang_configs = config.languages;
+        let TestcaseConfig { indir, .. } = config.testcase_config;
+        let indir = proj_dir.join(indir);
+
+        if config.validators.is_empty() {
+            return Err(Error::ConfInvalid {
+                description: "Validators not found in creo.toml".to_owned(),
+            });
+        }
+
+        for val in config.validators {
+            let src = proj_dir.join(&val.path);
+            let cd = src.join("..").clean();
+            let cd = self.to_absolute(&cd)?;
+            let lang_config = lang_configs
+                .iter()
+                .find(|&c| c.language_name == val.language_name);
+            if let Some(x) = lang_config {
+                let outpath = self.compile(&cd, &self.to_absolute(&src)?, &x.compile)?;
+                // Validate each file in `indir`.
+                for infile in self.list_dir(&indir)? {
+                    eprintln!("Validating {}", infile.to_str().unwrap());
+                    let infile = indir.join(&infile);
+                    if let Err(e) = self.run_with_input(&cd, &outpath, &x.run, &infile) {
+                        // A hack to check if the subprocess exited with status code != 0.
+                        if let Error::IOError(ref inner) = e {
+                            if inner.kind() == std::io::ErrorKind::InvalidData {
+                                let inner = match e {
+                                    Error::IOError(inner) => inner,
+                                    _ => unreachable!(),
+                                };
+
+                                return Err(Error::ValidationFailed {
+                                    validator: val.path.clone(),
+                                    infile: infile.display().to_string(),
+                                    inner: Box::new(inner) as Box<dyn std::error::Error>,
+                                });
+                            }
+                        }
+                        return Err(e);
+                    }
+                }
+            } else {
+                eprintln!("warning");
+                let e = Error::ConfInvalid {
+                    description: format!("language not found: {}", val.language_name),
+                };
+                return Err(e);
+            }
+        }
+
+        Ok(())
+    }
 }
 
 pub struct ProjectImpl;
@@ -288,6 +352,10 @@ run = ["./a.out"]
 path = "sol.cpp"
 language_name = "C++"
 is_reference_solution = true
+
+[[validators]]
+path = "val.cpp"
+language_name = "C++"
 "#
             .to_string())
         }
@@ -425,5 +493,12 @@ is_reference_solution = true
         } else {
             unreachable!("unreachable: the assertion above does not hold");
         }
+    }
+
+    #[test]
+    fn val_project_works() {
+        let mut project = MockProject { processed: vec![] };
+        let result = project.val(".");
+        result.unwrap();
     }
 }

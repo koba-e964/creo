@@ -24,3 +24,7 @@ expected_verdict = "wa"
 path = "re.cpp"
 language_name = "C++"
 expected_verdict = "re"
+
+[[validators]]
+path = "val.cpp"
+language_name = "C++"
