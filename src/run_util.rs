@@ -67,8 +67,9 @@ impl<T: RunUtilExt> RunUtil for T {
         // If there exists an already compiled binary, return early.
         if outpath.is_file() {
             eprintln!(
-                "File {} exists: skipping compilation",
+                "File {} exists: skipping compilation (source: {})",
                 outpath.to_str().unwrap(),
+                src.display(),
             )
         }
         let mut compile = compile.to_vec();
@@ -141,15 +142,21 @@ impl<T: RunUtilExt> RunUtil for T {
             .args(&args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            .stderr(Stdio::null())
             .current_dir(cd)
             .spawn()?;
+        let inproc;
         {
             let mut file = self.open_file_for_read(infile)?;
-            let content = self.read_from_file(&mut file)?;
-            let stdin = child.stdin.as_mut().expect("Failed to get stdin");
-            stdin.write_all(content.as_bytes())?;
+            let content = self.read_bytes_from_file(&mut file)?;
+            // Give stdin in a separate thread
+            let mut stdin = child.stdin.take().expect("Failed to get stdin");
+            inproc = std::thread::spawn(move || {
+                stdin.write_all(&content).expect("Failed to write content");
+            });
         }
         let output = child.wait_with_output()?;
+        inproc.join().unwrap();
         if !output.status.success() {
             eprintln!("run status = {}", output.status);
             let err = IOError::new(

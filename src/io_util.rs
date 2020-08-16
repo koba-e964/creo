@@ -25,12 +25,22 @@ pub trait IoUtil {
     }
     /// mock for write!(file, "{}", str)
     #[allow(unused)]
+    fn write_bytes_to_file(&self, file: &mut dyn Write, s: &[u8]) -> Result<()> {
+        unreachable!()
+    }
+    /// mock for write!(file, "{}", str)
+    #[allow(unused)]
     fn write_str_to_file(&self, file: &mut dyn Write, s: &str) -> Result<()> {
         unreachable!()
     }
     /// mock for read_to_end
     #[allow(unused)]
     fn read_from_file(&self, file: &mut dyn Read) -> Result<String> {
+        unreachable!()
+    }
+    /// mock for read_to_end
+    #[allow(unused)]
+    fn read_bytes_from_file(&self, file: &mut dyn Read) -> Result<Vec<u8>> {
         unreachable!()
     }
     /// Get the absolute path.
@@ -91,12 +101,21 @@ impl<T: IoUtilExt> IoUtil for T {
         write!(file, "{}", s)?;
         Ok(())
     }
+    fn write_bytes_to_file(&self, file: &mut dyn Write, s: &[u8]) -> Result<()> {
+        file.write_all(s)?;
+        Ok(())
+    }
     fn read_from_file(&self, file: &mut dyn Read) -> Result<String> {
         let mut buf = vec![];
         file.read_to_end(&mut buf)?;
         // TODO: handle encoding errors correctly
         let s = String::from_utf8(buf).unwrap();
         Ok(s)
+    }
+    fn read_bytes_from_file(&self, file: &mut dyn Read) -> Result<Vec<u8>> {
+        let mut buf = vec![];
+        file.read_to_end(&mut buf)?;
+        Ok(buf)
     }
     fn to_absolute(&self, path: &Path) -> Result<PathBuf> {
         let path = if path.is_absolute() {
