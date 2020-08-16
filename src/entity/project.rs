@@ -53,7 +53,7 @@ pub trait ProjectExt: IoUtil + RunUtil {
         match result {
             Ok(result) => {
                 let mut file = self.open_file_for_read(outfile)?;
-                let content = self.read_from_file(&mut file).map(|x| x.into_bytes())?;
+                let content = self.read_bytes_from_file(&mut file)?;
                 if &content == result {
                     Ok(Verdict::AC)
                 } else {
@@ -359,6 +359,9 @@ language_name = "C++"
 "#
             .to_string())
         }
+        fn read_bytes_from_file(&self, _file: &mut dyn std::io::Read) -> Result<Vec<u8>> {
+            Ok(b"correct output".to_vec())
+        }
         fn mkdir_p(&mut self, _path: &Path) -> Result<()> {
             Ok(())
         }
@@ -388,7 +391,7 @@ language_name = "C++"
             _run: &[String],
             _infile: &Path,
         ) -> Result<Vec<u8>> {
-            Ok((b"aa" as &[u8]).to_owned())
+            Ok((b"wrong output" as &[u8]).to_owned())
         }
         fn run_pipe(
             &mut self,

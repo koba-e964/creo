@@ -49,15 +49,15 @@ impl<T: RunUtilExt> RunUtil for T {
         let tempdir = Path::new("/tmp/creo-cache/");
         self.mkdir_p(&tempdir)?;
         // Compute a hash value from compile and the content of src.
-        let mut hash_str = String::new();
+        let mut hash_str = String::with_capacity(64);
         {
             let mut handle = self.open_file_for_read(src)?;
-            let content = self.read_from_file(&mut handle)?;
+            let content = self.read_bytes_from_file(&mut handle)?;
             let mut hasher: Sha256 = Sha256::new();
             for c in compile {
                 hasher.input(c.as_bytes());
             }
-            hasher.input(content.as_bytes());
+            hasher.input(&content);
             let hash_val = hasher.result();
             for &val in &hash_val {
                 hash_str += &format!("{:02x}", val);
@@ -187,7 +187,7 @@ impl<T: RunUtilExt> RunUtil for T {
             // TODO better name
             let mut file = self.create_file_if_nonexistent(&outfile)?;
             // TODO write arbitrary byte sequences
-            self.write_str_to_file(&mut file, &String::from_utf8(stdout).unwrap())?;
+            self.write_bytes_to_file(&mut file, &stdout)?;
         }
         Ok(())
     }
