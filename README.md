@@ -1,4 +1,4 @@
-# creo [![Build Status](https://travis-ci.com/koba-e964/creo.svg?branch=master)](https://travis-ci.com/koba-e964/creo)
+# creo [![Build Status](https://github.com/koba-e964/creo/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/koba-e964/creo/actions/workflows/rust.yml)
 
 `creo` helps you do pretty much anything about creating problems, especially on AtCoder, such as testing, generating and validating. `creo` achieves them with interoperability.
 
