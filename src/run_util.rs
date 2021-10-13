@@ -47,7 +47,7 @@ pub trait RunUtilExt: IoUtil {}
 impl<T: RunUtilExt> RunUtil for T {
     fn compile(&mut self, cd: &Path, src: &Path, compile: &[String]) -> Result<PathBuf> {
         let tempdir = Path::new("/tmp/creo-cache/");
-        self.mkdir_p(&tempdir)?;
+        self.mkdir_p(tempdir)?;
         // Compute a hash value from compile and the content of src.
         let mut hash_str = String::with_capacity(64);
         {
@@ -185,7 +185,7 @@ impl<T: RunUtilExt> RunUtil for T {
         let stdout = self.run_with_input(cd, exec, run, infile)?;
         {
             // TODO better name
-            let mut file = self.create_file_if_nonexistent(&outfile, 0o644)?;
+            let mut file = self.create_file_if_nonexistent(outfile, 0o644)?;
             // TODO write arbitrary byte sequences
             self.write_bytes_to_file(&mut file, &stdout)?;
         }

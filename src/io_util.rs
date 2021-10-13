@@ -74,7 +74,7 @@ impl<T: IoUtilExt> IoUtil for T {
     fn create_file_if_nonexistent(&mut self, filepath: &Path, mode: u32) -> Result<Box<dyn Write>> {
         let filepath = self.to_absolute(filepath)?;
         if let Some(parent) = filepath.parent() {
-            self.mkdir_p(&parent)?;
+            self.mkdir_p(parent)?;
         }
         let mut options = OpenOptions::new();
         options.write(true).create_new(true);
@@ -98,7 +98,7 @@ impl<T: IoUtilExt> IoUtil for T {
         }
         if !path.exists() {
             if let Some(parent) = path.parent() {
-                self.mkdir_p(&parent)?;
+                self.mkdir_p(parent)?;
             }
             std::fs::create_dir(path)?;
             return Ok(());

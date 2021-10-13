@@ -91,7 +91,7 @@ impl<T: ProjectExt> Project for T {
         // Read the config file
         let mut config = self.read_config(proj)?;
         let lang_configs = config.languages.clone();
-        let name = self.to_absolute(&Path::new(&name))?;
+        let name = self.to_absolute(Path::new(&name))?;
         let ext = name.extension();
         let mut lang = None;
         for l in lang_configs {
@@ -133,7 +133,7 @@ done
                 path: name.into_os_string().into_string().unwrap(),
                 language_name: lang,
             });
-            self.write_config(&proj, &config)?;
+            self.write_config(proj, &config)?;
             return Ok(());
         }
         if ty == "gen" {
@@ -504,29 +504,33 @@ language_name = "C++"
     #[test]
     fn check_reference_solution_works() {
         use crate::entity::sol::{SolutionConfig, Verdict};
-        let mut config = CreoConfig::default();
-        config.solutions = vec![SolutionConfig {
-            path: "".to_owned(),
-            language_name: "".to_owned(),
-            expected_verdict: Verdict::AC,
-            is_reference_solution: true,
-        }];
+        let config = CreoConfig {
+            solutions: vec![SolutionConfig {
+                path: "".to_owned(),
+                language_name: "".to_owned(),
+                expected_verdict: Verdict::AC,
+                is_reference_solution: true,
+            }],
+            ..Default::default()
+        };
         check_reference_solution(&config).unwrap();
     }
 
     #[test]
     fn check_reference_solution_fails_if_two_reference_solutions_exist() {
         use crate::entity::sol::{SolutionConfig, Verdict};
-        let mut config = CreoConfig::default();
-        config.solutions = vec![
-            SolutionConfig {
-                path: "".to_owned(),
-                language_name: "".to_owned(),
-                expected_verdict: Verdict::AC,
-                is_reference_solution: true,
-            };
-            2
-        ];
+        let config = CreoConfig {
+            solutions: vec![
+                SolutionConfig {
+                    path: "".to_owned(),
+                    language_name: "".to_owned(),
+                    expected_verdict: Verdict::AC,
+                    is_reference_solution: true,
+                };
+                2
+            ],
+            ..Default::default()
+        };
 
         let e = check_reference_solution(&config).unwrap_err();
         let desc = e.to_string();
@@ -538,13 +542,15 @@ language_name = "C++"
     #[test]
     fn check_reference_solution_fails_if_reference_solutions_expected_verdict_is_not_ac() {
         use crate::entity::sol::{SolutionConfig, Verdict};
-        let mut config = CreoConfig::default();
-        config.solutions = vec![SolutionConfig {
-            path: "".to_owned(),
-            language_name: "".to_owned(),
-            expected_verdict: Verdict::WA,
-            is_reference_solution: true,
-        }];
+        let config = CreoConfig {
+            solutions: vec![SolutionConfig {
+                path: "".to_owned(),
+                language_name: "".to_owned(),
+                expected_verdict: Verdict::WA,
+                is_reference_solution: true,
+            }],
+            ..Default::default()
+        };
 
         let e = check_reference_solution(&config).unwrap_err();
         let desc = e.to_string();
