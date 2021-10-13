@@ -185,7 +185,7 @@ impl<T: RunUtilExt> RunUtil for T {
         let stdout = self.run_with_input(cd, exec, run, infile)?;
         {
             // TODO better name
-            let mut file = self.create_file_if_nonexistent(&outfile)?;
+            let mut file = self.create_file_if_nonexistent(&outfile, 0o644)?;
             // TODO write arbitrary byte sequences
             self.write_bytes_to_file(&mut file, &stdout)?;
         }

@@ -6,7 +6,7 @@ path = "gen.cpp"
 
 [[languages]]
 language_name = "C++"
-target_ext = ".cpp"
+target_ext = "cpp"
 compile = ["g++", "-O2", "-std=gnu++11", "-o", "$OUT", "$IN"]
 run = ["$OUT"]
 

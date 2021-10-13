@@ -1,6 +1,8 @@
 use path_clean::PathClean;
 use std::fs::OpenOptions;
 use std::io::{Error as IOError, ErrorKind, Read, Write};
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
 
 use crate::error::Result;
@@ -9,12 +11,17 @@ pub trait IoUtil {
     /// Create a file if a file with the same name doesn't exist.
     /// If some of the intermediate directories are missing, they will be created.
     #[allow(unused)]
-    fn create_file_if_nonexistent(&mut self, filepath: &Path) -> Result<Box<dyn Write>> {
+    fn create_file_if_nonexistent(&mut self, filepath: &Path, mode: u32) -> Result<Box<dyn Write>> {
         unreachable!()
     }
     /// Open a file for reading.
     #[allow(unused)]
     fn open_file_for_read(&self, filepath: &Path) -> Result<Box<dyn Read>> {
+        unreachable!()
+    }
+    /// Open a file for writing.
+    #[allow(unused)]
+    fn open_file_for_write(&self, filepath: &Path) -> Result<Box<dyn Write>> {
         unreachable!()
     }
     /// Make a directory at path.
@@ -64,19 +71,24 @@ pub trait IoUtilExt {}
 impl<T: IoUtilExt> IoUtil for T {
     /// Create a file if a file with the same name doesn't exist.
     /// If some of the intermediate directories are missing, they will be created.
-    fn create_file_if_nonexistent(&mut self, filepath: &Path) -> Result<Box<dyn Write>> {
+    fn create_file_if_nonexistent(&mut self, filepath: &Path, mode: u32) -> Result<Box<dyn Write>> {
         let filepath = self.to_absolute(filepath)?;
         if let Some(parent) = filepath.parent() {
             self.mkdir_p(&parent)?;
         }
-        let file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(filepath)?;
+        let mut options = OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        options.mode(mode);
+        let file = options.open(filepath)?;
         Ok(Box::new(file))
     }
     fn open_file_for_read(&self, filepath: &Path) -> Result<Box<dyn Read>> {
         let file = OpenOptions::new().read(true).open(filepath)?;
+        Ok(Box::new(file))
+    }
+    fn open_file_for_write(&self, filepath: &Path) -> Result<Box<dyn Write>> {
+        let file = OpenOptions::new().write(true).open(filepath)?;
         Ok(Box::new(file))
     }
     fn mkdir_p(&mut self, path: &Path) -> Result<()> {

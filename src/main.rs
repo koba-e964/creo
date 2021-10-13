@@ -1,15 +1,18 @@
 #[macro_use]
 extern crate clap;
 use clap::App;
-use creo::cmd::{all, check, gen, init, refgen, test, val, Command};
+use creo::cmd::{add, all, check, gen, init, refgen, test, val, Command};
 use creo::entity::project::ProjectImpl;
 
 fn main() {
     let mut commands = [
+        &mut add::AddCommand {
+            project: ProjectImpl,
+        } as &mut dyn Command,
         &mut all::AllCommand {
             project: ProjectImpl,
         },
-        &mut init::InitCommand as &mut dyn Command,
+        &mut init::InitCommand,
         &mut check::CheckCommand {
             project: ProjectImpl,
         },

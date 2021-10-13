@@ -1,14 +1,22 @@
 use path_clean::PathClean;
+use std::ffi::OsString;
 use std::path::Path;
 
 use crate::entity::config::CreoConfig;
 use crate::entity::sol::Verdict;
 use crate::entity::testcase::TestcaseConfig;
+use crate::entity::val::ValidatorConfig;
 use crate::error::{Error, Result};
 use crate::io_util::{IoUtil, IoUtilExt};
 use crate::run_util::{RunUtil, RunUtilExt};
+
 /// A trait that provides functions to handle a project directory.
 pub trait Project {
+    /// Add a new entity.
+    #[allow(unused)]
+    fn add(&mut self, proj_dir: &str, ty: &str, name: &str) -> Result<()> {
+        unreachable!();
+    }
     /// Check if the config file is valid.
     #[allow(unused)]
     fn check(&mut self, proj_dir: &str) -> Result<()> {
@@ -42,10 +50,18 @@ pub trait ProjectExt: IoUtil + RunUtil {
         let config_filepath = proj.join("creo.toml");
         let mut file = self.open_file_for_read(&config_filepath)?;
         let content = self.read_from_file(&mut file)?;
-        // TODO: better error handling (user-defined error type probably helps)
         let config: CreoConfig = toml::from_str(&content)?;
 
         Ok(config)
+    }
+
+    fn write_config(&mut self, proj: &Path, config: &CreoConfig) -> Result<()> {
+        // Read the config file
+        let config_filepath = proj.join("creo.toml");
+        let mut file = self.open_file_for_write(&config_filepath)?;
+        self.write_str_to_file(&mut file, &toml::to_string(config)?)?;
+
+        Ok(())
     }
 
     // Given the result of execution and the expected output file, find the verdict.
@@ -69,6 +85,67 @@ pub trait ProjectExt: IoUtil + RunUtil {
 }
 
 impl<T: ProjectExt> Project for T {
+    fn add(&mut self, proj_dir: &str, ty: &str, name: &str) -> Result<()> {
+        let proj = Path::new(proj_dir);
+
+        // Read the config file
+        let mut config = self.read_config(proj)?;
+        let lang_configs = config.languages.clone();
+        let name = self.to_absolute(&Path::new(&name))?;
+        let ext = name.extension();
+        let mut lang = None;
+        for l in lang_configs {
+            if ext == Some(&OsString::from(l.target_ext)) {
+                lang = Some(l.language_name.clone());
+            }
+        }
+        let lang = if let Some(lang) = lang {
+            lang
+        } else {
+            return Err(Error::ConfInvalid {
+                description: "extension not registered in the conf file".to_owned(),
+            });
+        };
+        // same directory, same name with the extension replaced with .sh
+        let mut script_filepath = name.clone();
+        script_filepath.set_extension("sh");
+        if ty == "val" {
+            let mut shfile = self.create_file_if_nonexistent(&script_filepath, 0o755)?;
+            self.create_file_if_nonexistent(&name, 0o644)?;
+            let file_name = name.file_name().unwrap().to_str().unwrap();
+            let file_stem = name.file_stem().unwrap().to_str().unwrap();
+            // TODO: support other languages
+            // TODO: support other directories
+            self.write_str_to_file(
+                &mut shfile,
+                &format!(
+                    r#"#!/bin/bash
+g++ -O2 {} -o {} -DLOCAL
+for file in ../in/*; do
+    echo ${{file}}
+    ./{} <${{file}}
+done
+"#,
+                    file_name, file_stem, file_stem
+                ),
+            )?;
+            config.validators.push(ValidatorConfig {
+                path: name.into_os_string().into_string().unwrap(),
+                language_name: lang,
+            });
+            self.write_config(&proj, &config)?;
+            return Ok(());
+        }
+        if ty == "gen" {
+            panic!()
+        }
+        if ty == "sol" {
+            panic!()
+        }
+        Err(Error::UnknownEntityType {
+            entity_type: ty.to_owned(),
+        })
+    }
     fn check(&mut self, proj_dir: &str) -> Result<()> {
         let proj = Path::new(proj_dir);
 
@@ -192,13 +269,14 @@ impl<T: ProjectExt> Project for T {
                 // For all files in `indir`, generate the counterpart in `outdir`.
                 let mut overall_verdict = Verdict::AC;
                 for infile in self.list_dir(&indir)? {
-                    eprintln!("Running {}", infile.to_str().unwrap());
+                    eprint!("Running {}", infile.to_str().unwrap());
                     let outfile = outdir.join(&infile);
                     let infile = indir.join(&infile);
 
                     let result = self.run_with_input(&cd, &outpath, &x.run, &infile);
                     let verdict = self.get_verdict(&result, &outfile)?;
-                    overall_verdict = std::cmp::max(overall_verdict, verdict);
+                    overall_verdict = std::cmp::max(overall_verdict, verdict.clone());
+                    eprintln!(" {:?} (overall: {:?})", verdict, overall_verdict);
                 }
                 if sol.expected_verdict != overall_verdict {
                     return Err(Error::VerdictMismatch {
@@ -333,8 +411,18 @@ mod tests {
         processed: Vec<(String, String)>,
     }
     impl IoUtil for MockProject {
+        fn create_file_if_nonexistent(
+            &mut self,
+            _filepath: &Path,
+            _mode: u32,
+        ) -> Result<Box<dyn std::io::Write>> {
+            Ok(Box::new(vec![]))
+        }
         fn open_file_for_read(&self, _filepath: &Path) -> Result<Box<dyn std::io::Read>> {
             Ok(Box::new(b"don't care" as &[u8]))
+        }
+        fn open_file_for_write(&self, _filepath: &Path) -> Result<Box<dyn std::io::Write>> {
+            Ok(Box::new(vec![]))
         }
         fn read_from_file(&self, _file: &mut dyn std::io::Read) -> Result<String> {
             Ok(r#"
@@ -344,7 +432,7 @@ path = "gen.cpp"
 
 [[languages]]
 language_name = "C++"
-target_ext = ".cpp"
+target_ext = "cpp"
 compile = ["g++", "-O2", "-std=gnu++11", "-o", "$OUT", "$IN"]
 run = ["./a.out"]
 
@@ -362,11 +450,14 @@ language_name = "C++"
         fn read_bytes_from_file(&self, _file: &mut dyn std::io::Read) -> Result<Vec<u8>> {
             Ok(b"correct output".to_vec())
         }
+        fn write_str_to_file(&self, _file: &mut dyn std::io::Write, _s: &str) -> Result<()> {
+            Ok(())
+        }
         fn mkdir_p(&mut self, _path: &Path) -> Result<()> {
             Ok(())
         }
         fn to_absolute(&self, _path: &Path) -> Result<PathBuf> {
-            Ok("gen-absolute".into())
+            Ok("gen-absolute.cpp".into())
         }
         fn list_dir(&self, _path: &Path) -> Result<Vec<PathBuf>> {
             Ok(vec!["a".into(), "b".into()])
@@ -377,7 +468,7 @@ language_name = "C++"
     }
     impl RunUtil for MockProject {
         fn compile(&mut self, _cd: &Path, src: &Path, _compile: &[String]) -> Result<PathBuf> {
-            assert_eq!(src, PathBuf::from("gen-absolute"));
+            assert_eq!(src, PathBuf::from("gen-absolute.cpp"));
             Ok("outpath".into())
         }
         fn run_once(&mut self, _cd: &Path, exec: &Path, _run: &[String]) -> Result<()> {
@@ -462,6 +553,12 @@ language_name = "C++"
         assert!(desc.contains("reference solution"), "desc = {}", desc);
         assert!(desc.contains("WA"), "desc = {}", desc);
         assert!(desc.contains("AC"), "desc = {}", desc);
+    }
+
+    #[test]
+    fn add_project_works() {
+        let mut project = MockProject { processed: vec![] };
+        project.add(".", "val", "test.cpp").unwrap();
     }
 
     #[test]

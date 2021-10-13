@@ -59,7 +59,7 @@ Limitations are:
 If `DESTINATION/creo.toml` already exists, the creation process will fail.
 
 ### `creo add`
-`creo add TYPE OUTFILE` will add a file of the designated type.
+`creo add PROJECT TYPE OUTFILE` will add a file of the designated type.
 `TYPE` can be one of the following:
 - `val`: validator (in `etc/`)
 - `gen`: generator (in `etc/`)

@@ -25,6 +25,8 @@ pub enum Error {
         #[source]
         toml::de::Error,
     ),
+    #[error("Unknown entity type: {entity_type}")]
+    UnknownEntityType { entity_type: String },
     #[error("Validation failed: validator = {validator}, infile = {infile}")]
     ValidationFailed {
         validator: String,

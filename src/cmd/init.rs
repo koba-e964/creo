@@ -35,7 +35,7 @@ fn initialize_project(dest: &str, io_util: &mut dyn IoUtil) -> Result<()> {
     let config_filepath = dest.join("creo.toml");
     let config = crate::entity::config::CreoConfig::default();
     println!("{}", toml::to_string(&config)?);
-    let mut file = io_util.create_file_if_nonexistent(&config_filepath)?;
+    let mut file = io_util.create_file_if_nonexistent(&config_filepath, 0o644)?;
     io_util.write_str_to_file(&mut file, &toml::to_string(&config)?)?;
 
     // Create subdirectories
@@ -55,7 +55,11 @@ mod tests {
         dirs: HashSet<String>,
     }
     impl IoUtil for MockIoUtil {
-        fn create_file_if_nonexistent(&mut self, _filepath: &Path) -> Result<Box<dyn Write>> {
+        fn create_file_if_nonexistent(
+            &mut self,
+            _filepath: &Path,
+            _mode: u32,
+        ) -> Result<Box<dyn Write>> {
             Ok(Box::new(vec![]))
         }
         fn mkdir_p(&mut self, path: &Path) -> Result<()> {

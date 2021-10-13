@@ -43,7 +43,7 @@ fn time_limit_default() -> f64 {
 pub struct LanguageConfig {
     /// name
     pub language_name: String,
-    /// target extension
+    /// target extension, e.g. "cpp", "py"
     pub target_ext: String,
     /// How can we compile the source code?
     pub compile: Vec<String>,
@@ -56,7 +56,7 @@ impl Default for CreoConfig {
     fn default() -> Self {
         let cpp = LanguageConfig {
             language_name: "C++".to_owned(),
-            target_ext: ".cpp".to_owned(),
+            target_ext: "cpp".to_owned(),
             compile: vec!["g++", "-O2", "-std=gnu++11", "-o", "$OUT", "$IN"]
                 .into_iter()
                 .map(|x| x.to_owned())
@@ -65,7 +65,7 @@ impl Default for CreoConfig {
         };
         let python = LanguageConfig {
             language_name: "Python".to_owned(),
-            target_ext: ".py".to_owned(),
+            target_ext: "py".to_owned(),
             compile: vec!["cp", "$IN", "$OUT"]
                 .into_iter()
                 .map(|x| x.to_owned())
