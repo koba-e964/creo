@@ -94,13 +94,15 @@ impl<T: ProjectExt> Project for T {
         let name = self.to_absolute(Path::new(&name))?;
         let ext = name.extension();
         let mut lang = None;
+        let mut lang_conf = None;
         for l in lang_configs {
-            if ext == Some(&OsString::from(l.target_ext)) {
+            if ext == Some(&OsString::from(l.target_ext.clone())) {
                 lang = Some(l.language_name.clone());
+                lang_conf = Some(l.clone());
             }
         }
-        let lang = if let Some(lang) = lang {
-            lang
+        let (lang, lang_conf) = if let (Some(lang), Some(lang_conf)) = (lang, lang_conf) {
+            (lang, lang_conf)
         } else {
             return Err(Error::ConfInvalid {
                 description: "extension not registered in the conf file".to_owned(),
@@ -112,21 +114,23 @@ impl<T: ProjectExt> Project for T {
         if ty == "val" {
             let mut shfile = self.create_file_if_nonexistent(&script_filepath, 0o755)?;
             self.create_file_if_nonexistent(&name, 0o644)?;
-            let file_name = name.file_name().unwrap().to_str().unwrap();
             let file_stem = name.file_stem().unwrap().to_str().unwrap();
-            // TODO: support other languages
+            let in_dir = config.testcase_config.indir.clone();
+            let cmd = self.build_command(&lang_conf.compile, &name, Path::new(file_stem));
+            let mut cmd = cmd.iter().fold("".to_owned(), |x, y| x + y + " ");
+            cmd.pop();
             // TODO: support other directories
             self.write_str_to_file(
                 &mut shfile,
                 &format!(
                     r#"#!/bin/bash
-g++ -O2 {} -o {} -DLOCAL
-for file in ../in/*; do
+{}
+for file in ../{}/*; do
     echo ${{file}}
     ./{} <${{file}}
 done
 "#,
-                    file_name, file_stem, file_stem
+                    cmd, in_dir, file_stem
                 ),
             )?;
             config.validators.push(ValidatorConfig {
@@ -497,6 +501,9 @@ language_name = "C++"
                 outfile.to_str().unwrap().to_owned(),
             ));
             Ok(())
+        }
+        fn build_command(&self, _run: &[String], _infile: &Path, _outfile: &Path) -> Vec<String> {
+            vec!["gcc".to_owned()]
         }
     }
     impl ProjectExt for MockProject {}

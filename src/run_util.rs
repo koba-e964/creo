@@ -41,6 +41,11 @@ pub trait RunUtil {
     ) -> Result<()> {
         unreachable!()
     }
+    /// Replaces $IN and $OUT in run with infile and outfile.
+    #[allow(unused)]
+    fn build_command(&self, run: &[String], infile: &Path, outfile: &Path) -> Vec<String> {
+        unreachable!()
+    }
 }
 
 pub trait RunUtilExt: IoUtil {}
@@ -72,15 +77,7 @@ impl<T: RunUtilExt> RunUtil for T {
                 src.display(),
             )
         }
-        let mut compile = compile.to_vec();
-        for v in compile.iter_mut() {
-            if *v == "$IN" {
-                *v = src.to_str().unwrap().to_owned();
-            }
-            if *v == "$OUT" {
-                *v = outpath.to_str().unwrap().to_owned();
-            }
-        }
+        let compile = self.build_command(compile, src, &outpath);
         let prog = &compile[0];
         let args = compile[1..].to_vec();
         let status = Command::new(prog).current_dir(cd).args(&args).status()?;
@@ -191,9 +188,41 @@ impl<T: RunUtilExt> RunUtil for T {
         }
         Ok(())
     }
+    fn build_command(&self, run: &[String], infile: &Path, outfile: &Path) -> Vec<String> {
+        let mut compile = run.to_vec();
+        for v in compile.iter_mut() {
+            if *v == "$IN" {
+                *v = infile.to_str().unwrap().to_owned();
+            }
+            if *v == "$OUT" {
+                *v = outfile.to_str().unwrap().to_owned();
+            }
+        }
+        compile
+    }
 }
 
 pub struct RunUtilImpl;
 
 impl RunUtilExt for RunUtilImpl {}
 impl IoUtilExt for RunUtilImpl {}
+
+#[cfg(test)]
+mod tests {
+    use super::{RunUtil, RunUtilImpl};
+    use std::path::Path;
+
+    #[test]
+    fn build_command_works() {
+        let cmd = [
+            "gcc".to_owned(),
+            "-o".to_owned(),
+            "$OUT".to_owned(),
+            "$IN".to_owned(),
+        ];
+        let infile = "in-file";
+        let outfile = "out-file";
+        let result = RunUtilImpl.build_command(&cmd, Path::new(infile), Path::new(outfile));
+        assert_eq!(result, vec!["gcc", "-o", "out-file", "in-file"]);
+    }
+}
