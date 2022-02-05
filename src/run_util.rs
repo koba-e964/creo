@@ -60,10 +60,10 @@ impl<T: RunUtilExt> RunUtil for T {
             let content = self.read_bytes_from_file(&mut handle)?;
             let mut hasher: Sha256 = Sha256::new();
             for c in compile {
-                hasher.input(c.as_bytes());
+                hasher.update(c.as_bytes());
             }
-            hasher.input(&content);
-            let hash_val = hasher.result();
+            hasher.update(&content);
+            let hash_val = hasher.finalize();
             for &val in &hash_val {
                 hash_str += &format!("{:02x}", val);
             }
