@@ -11,3 +11,11 @@ sha2 = "0.10"
 toml = "0.5"
 path-clean = "0.1"
 thiserror = "1"
+
+[dev-dependencies]
+assert_cmd = "2"
+assert_fs = "1"
+predicates = "1"
+
+[profile.dev]
+debug = false
