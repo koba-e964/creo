@@ -1,5 +1,5 @@
 use super::Command;
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 use std::path::Path;
 
 use crate::error::Result;
@@ -8,15 +8,13 @@ use crate::io_util::{IoUtil, IoUtilImpl};
 pub struct InitCommand;
 
 impl Command for InitCommand {
-    fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
-        SubCommand::with_name("init")
-            .about("initialize a project")
-            .arg(
-                Arg::with_name("DESTINATION")
-                    .help("Destination directory")
-                    .required(true)
-                    .index(1),
-            )
+    fn get_subcommand<'a>(&self) -> App<'a> {
+        App::new("init").about("initialize a project").arg(
+            Arg::new("DESTINATION")
+                .help("Destination directory")
+                .required(true)
+                .index(1),
+        )
     }
     fn check(&mut self, matches: &ArgMatches) -> Option<()> {
         let matches = matches.subcommand_matches("init")?;

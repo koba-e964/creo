@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 
 use super::Command;
 use crate::entity::project::Project;
@@ -10,23 +10,23 @@ pub struct AddCommand<P> {
 }
 
 impl<P: Project> Command for AddCommand<P> {
-    fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
-        SubCommand::with_name("add")
+    fn get_subcommand<'a>(&self) -> App<'a> {
+        App::new("add")
             .about("add an entity")
             .arg(
-                Arg::with_name("PROJECT")
+                Arg::new("PROJECT")
                     .help("Project directory")
                     .required(true)
                     .index(1),
             )
             .arg(
-                Arg::with_name("TYPE")
+                Arg::new("TYPE")
                     .help("Entity type to add")
                     .required(true)
                     .index(2),
             )
             .arg(
-                Arg::with_name("NAME")
+                Arg::new("NAME")
                     .help("The entity's name")
                     .required(true)
                     .index(3),
@@ -83,7 +83,7 @@ mod tests {
         let command = vec!["problem-creator", "add", "project_dir", "--wa"];
         let matches = App::new("problem-creator")
             .subcommand(add_command.get_subcommand())
-            .get_matches_from_safe(command);
+            .try_get_matches_from(command);
         assert_eq!(
             matches.err().map(|x| x.kind),
             Some(ErrorKind::UnknownArgument),
@@ -93,10 +93,7 @@ mod tests {
         let command = vec!["problem-creator", "test", "project_dir"];
         let matches = App::new("problem-creator")
             .subcommand(add_command.get_subcommand())
-            .subcommand(
-                SubCommand::with_name("test")
-                    .arg(Arg::with_name("PROJECT").required(true).index(1)),
-            )
+            .subcommand(App::new("test").arg(Arg::new("PROJECT").required(true).index(1)))
             .get_matches_from(command);
         assert_eq!(add_command.check(&matches), None);
     }

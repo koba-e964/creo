@@ -1,5 +1,5 @@
 use super::Command;
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 
 use crate::entity::project::Project;
 
@@ -8,9 +8,9 @@ pub struct CheckCommand<P> {
 }
 
 impl<P: Project> Command for CheckCommand<P> {
-    fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
-        SubCommand::with_name("check").about("check creo.toml").arg(
-            Arg::with_name("PROJECT")
+    fn get_subcommand<'a>(&self) -> App<'a> {
+        App::new("check").about("check creo.toml").arg(
+            Arg::new("PROJECT")
                 .help("Project directory")
                 .required(true)
                 .index(1),

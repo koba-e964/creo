@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 
 use super::Command;
 use crate::entity::project::Project;
@@ -10,15 +10,13 @@ pub struct TestCommand<P> {
 }
 
 impl<P: Project> Command for TestCommand<P> {
-    fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
-        SubCommand::with_name(TEST_COMMAND)
-            .about("test all solutions")
-            .arg(
-                Arg::with_name("PROJECT")
-                    .help("Project directory")
-                    .required(true)
-                    .index(1),
-            )
+    fn get_subcommand<'a>(&self) -> App<'a> {
+        App::new(TEST_COMMAND).about("test all solutions").arg(
+            Arg::new("PROJECT")
+                .help("Project directory")
+                .required(true)
+                .index(1),
+        )
     }
     fn check(&mut self, matches: &ArgMatches) -> Option<()> {
         let matches = matches.subcommand_matches(TEST_COMMAND)?;

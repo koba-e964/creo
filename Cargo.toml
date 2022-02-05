@@ -5,7 +5,7 @@ authors = ["koba-e964 <3303362+koba-e964@users.noreply.github.com>"]
 edition = "2021"
 
 [dependencies]
-clap = "~2.33"
+clap = { version = "3", features = ["cargo"] }
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
 toml = "0.5"

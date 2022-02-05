@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 
 use super::Command;
 use crate::entity::project::Project;
@@ -10,11 +10,11 @@ pub struct ValCommand<P> {
 }
 
 impl<P: Project> Command for ValCommand<P> {
-    fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
-        SubCommand::with_name(VAL_COMMAND)
+    fn get_subcommand<'a>(&self) -> App<'a> {
+        App::new(VAL_COMMAND)
             .about("validate testcases (input)")
             .arg(
-                Arg::with_name("PROJECT")
+                Arg::new("PROJECT")
                     .help("Project directory")
                     .required(true)
                     .index(1),
@@ -63,7 +63,7 @@ mod tests {
         let command = vec!["problem-creator", "val", "project_dir", "--wa"];
         let matches = App::new("problem-creator")
             .subcommand(val_command.get_subcommand())
-            .get_matches_from_safe(command);
+            .try_get_matches_from(command);
         assert_eq!(
             matches.err().map(|x| x.kind),
             Some(ErrorKind::UnknownArgument),
@@ -73,10 +73,7 @@ mod tests {
         let command = vec!["problem-creator", "test", "project_dir"];
         let matches = App::new("problem-creator")
             .subcommand(val_command.get_subcommand())
-            .subcommand(
-                SubCommand::with_name("test")
-                    .arg(Arg::with_name("PROJECT").required(true).index(1)),
-            )
+            .subcommand(App::new("test").arg(Arg::new("PROJECT").required(true).index(1)))
             .get_matches_from(command);
         assert_eq!(val_command.check(&matches), None);
     }

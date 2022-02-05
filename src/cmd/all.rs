@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 
 use super::Command;
 use crate::entity::project::Project;
@@ -10,15 +10,13 @@ pub struct AllCommand<P> {
 }
 
 impl<P: Project> Command for AllCommand<P> {
-    fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
-        SubCommand::with_name(ALL_COMMAND)
-            .about("run all processes")
-            .arg(
-                Arg::with_name("PROJECT")
-                    .help("Project directory")
-                    .required(true)
-                    .index(1),
-            )
+    fn get_subcommand<'a>(&self) -> App<'a> {
+        App::new(ALL_COMMAND).about("run all processes").arg(
+            Arg::new("PROJECT")
+                .help("Project directory")
+                .required(true)
+                .index(1),
+        )
     }
     fn check(&mut self, matches: &ArgMatches) -> Option<()> {
         let matches = matches.subcommand_matches(ALL_COMMAND)?;
@@ -75,7 +73,7 @@ mod tests {
         let command = vec!["problem-creator", "all", "project_dir", "--wa"];
         let matches = App::new("problem-creator")
             .subcommand(all_command.get_subcommand())
-            .get_matches_from_safe(command);
+            .try_get_matches_from(command);
         assert_eq!(
             matches.err().map(|x| x.kind),
             Some(ErrorKind::UnknownArgument),
@@ -85,10 +83,7 @@ mod tests {
         let command = vec!["problem-creator", "test", "project_dir"];
         let matches = App::new("problem-creator")
             .subcommand(all_command.get_subcommand())
-            .subcommand(
-                SubCommand::with_name("test")
-                    .arg(Arg::with_name("PROJECT").required(true).index(1)),
-            )
+            .subcommand(App::new("test").arg(Arg::new("PROJECT").required(true).index(1)))
             .get_matches_from(command);
         assert_eq!(all_command.check(&matches), None);
     }

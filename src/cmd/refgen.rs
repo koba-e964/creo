@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 
 use super::Command;
 use crate::entity::project::Project;
@@ -12,16 +12,12 @@ pub struct RefGenCommand<P> {
 }
 
 impl<P: Project> Command for RefGenCommand<P> {
-    fn get_subcommand<'b, 'a: 'b>(&self) -> App<'a, 'b> {
-        SubCommand::with_name(REFGEN_COMMAND)
+    fn get_subcommand<'a>(&self) -> App<'a> {
+        App::new(REFGEN_COMMAND)
             .about("generate test output from a model solution")
+            .arg(Arg::new(SKIP_IN).long(SKIP_IN_LONG_ARG).takes_value(false))
             .arg(
-                Arg::with_name(SKIP_IN)
-                    .long(SKIP_IN_LONG_ARG)
-                    .takes_value(false),
-            )
-            .arg(
-                Arg::with_name("PROJECT")
+                Arg::new("PROJECT")
                     .help("Project directory")
                     .required(true)
                     .index(1),
