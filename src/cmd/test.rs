@@ -10,7 +10,7 @@ pub struct TestCommand<P> {
 }
 
 impl<P: Project> Command for TestCommand<P> {
-    fn get_subcommand<'a>(&self) -> ClapCommand<'a> {
+    fn get_subcommand(&self) -> ClapCommand {
         ClapCommand::new(TEST_COMMAND)
             .about("test all solutions")
             .arg(

@@ -10,7 +10,7 @@ pub struct ValCommand<P> {
 }
 
 impl<P: Project> Command for ValCommand<P> {
-    fn get_subcommand<'a>(&self) -> ClapCommand<'a> {
+    fn get_subcommand(&self) -> ClapCommand {
         ClapCommand::new(VAL_COMMAND)
             .about("validate testcases (input)")
             .arg(
@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     use crate::error::Result;
-    use clap::{Command as ClapCommand, ErrorKind};
+    use clap::{error::ErrorKind, Command as ClapCommand};
 
     struct MockProject;
     impl Project for MockProject {

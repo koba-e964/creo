@@ -8,7 +8,7 @@ use crate::io_util::{IoUtil, IoUtilImpl};
 pub struct InitCommand;
 
 impl Command for InitCommand {
-    fn get_subcommand<'a>(&self) -> ClapCommand<'a> {
+    fn get_subcommand(&self) -> ClapCommand {
         ClapCommand::new("init").about("initialize a project").arg(
             Arg::new("DESTINATION")
                 .help("Destination directory")

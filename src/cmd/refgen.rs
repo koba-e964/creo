@@ -12,10 +12,10 @@ pub struct RefGenCommand<P> {
 }
 
 impl<P: Project> Command for RefGenCommand<P> {
-    fn get_subcommand<'a>(&self) -> ClapCommand<'a> {
+    fn get_subcommand(&self) -> ClapCommand {
         ClapCommand::new(REFGEN_COMMAND)
             .about("generate test output from a model solution")
-            .arg(Arg::new(SKIP_IN).long(SKIP_IN_LONG_ARG).takes_value(false))
+            .arg(Arg::new(SKIP_IN).long(SKIP_IN_LONG_ARG).required(false))
             .arg(
                 Arg::new("PROJECT")
                     .help("Project directory")

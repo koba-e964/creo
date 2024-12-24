@@ -8,7 +8,7 @@ pub struct CheckCommand<P> {
 }
 
 impl<P: Project> Command for CheckCommand<P> {
-    fn get_subcommand<'a>(&self) -> ClapCommand<'a> {
+    fn get_subcommand(&self) -> ClapCommand {
         ClapCommand::new("check").about("check creo.toml").arg(
             Arg::new("PROJECT")
                 .help("Project directory")

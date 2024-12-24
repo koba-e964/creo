@@ -10,7 +10,7 @@ pub struct AddCommand<P> {
 }
 
 impl<P: Project> Command for AddCommand<P> {
-    fn get_subcommand<'a>(&self) -> ClapCommand<'a> {
+    fn get_subcommand(&self) -> ClapCommand {
         ClapCommand::new("add")
             .about("add an entity")
             .arg(
@@ -47,7 +47,7 @@ mod tests {
     use super::*;
 
     use crate::error::Result;
-    use clap::{Command as ClapCommand, ErrorKind};
+    use clap::{error::ErrorKind, Command as ClapCommand};
 
     struct MockProject;
     impl Project for MockProject {

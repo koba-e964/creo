@@ -10,6 +10,6 @@ pub mod test;
 pub mod val;
 
 pub trait Command {
-    fn get_subcommand<'a>(&self) -> ClapCommand<'a>;
+    fn get_subcommand(&self) -> ClapCommand;
     fn check(&mut self, matches: &ArgMatches) -> Option<()>;
 }
