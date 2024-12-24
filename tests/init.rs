@@ -9,7 +9,7 @@ fn init_works() {
     Command::cargo_bin("creo")
         .unwrap()
         .current_dir(&temp)
-        .args(&["init", "."])
+        .args(["init", "."])
         .unwrap();
     temp.child("creo.toml").assert(predicate::path::is_file());
 

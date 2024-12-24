@@ -405,6 +405,7 @@ fn check_reference_solution(config: &CreoConfig) -> Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
 mod tests {
     use std::path::PathBuf;
 

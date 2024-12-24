@@ -17,10 +17,11 @@ pub struct SolutionConfig {
 }
 
 /// Judge's verdict. Bigger it is, worse it is.
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Verdict {
     /// ACcepted. The solution is correct.
+    #[default]
     AC,
     /// Time Limit Exceeded. The solution didn't finish before the predetermined time limit.
     TLE,
@@ -38,12 +39,6 @@ pub enum Verdict {
 
 fn is_ac(x: &Verdict) -> bool {
     x == &Verdict::AC
-}
-
-impl Default for Verdict {
-    fn default() -> Self {
-        Verdict::AC
-    }
 }
 
 fn is_false(x: &bool) -> bool {
