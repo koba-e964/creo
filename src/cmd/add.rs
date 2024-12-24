@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgMatches};
+use clap::{Arg, ArgMatches, Command as ClapCommand};
 
 use super::Command;
 use crate::entity::project::Project;
@@ -10,8 +10,8 @@ pub struct AddCommand<P> {
 }
 
 impl<P: Project> Command for AddCommand<P> {
-    fn get_subcommand<'a>(&self) -> App<'a> {
-        App::new("add")
+    fn get_subcommand<'a>(&self) -> ClapCommand<'a> {
+        ClapCommand::new("add")
             .about("add an entity")
             .arg(
                 Arg::new("PROJECT")
@@ -34,9 +34,9 @@ impl<P: Project> Command for AddCommand<P> {
     }
     fn check(&mut self, matches: &ArgMatches) -> Option<()> {
         let matches = matches.subcommand_matches(ADD_COMMAND)?;
-        let proj_dir = matches.value_of("PROJECT").unwrap();
-        let ty = matches.value_of("TYPE").unwrap();
-        let name = matches.value_of("NAME").unwrap();
+        let proj_dir = matches.get_one::<String>("PROJECT").unwrap();
+        let ty = matches.get_one::<String>("TYPE").unwrap();
+        let name = matches.get_one::<String>("NAME").unwrap();
         self.project.add(proj_dir, ty, name).unwrap();
         Some(())
     }
@@ -47,7 +47,7 @@ mod tests {
     use super::*;
 
     use crate::error::Result;
-    use clap::{App, ErrorKind};
+    use clap::{Command as ClapCommand, ErrorKind};
 
     struct MockProject;
     impl Project for MockProject {
@@ -67,7 +67,7 @@ mod tests {
             "sol",
             "sol-koba.cpp",
         ];
-        let matches = App::new("problem-creator")
+        let matches = ClapCommand::new("problem-creator")
             .subcommand(add_command.get_subcommand())
             .get_matches_from(command);
         assert_eq!(add_command.check(&matches), Some(()));
@@ -81,19 +81,19 @@ mod tests {
 
         // unknown arguments
         let command = vec!["problem-creator", "add", "project_dir", "--wa"];
-        let matches = App::new("problem-creator")
+        let matches = ClapCommand::new("problem-creator")
             .subcommand(add_command.get_subcommand())
             .try_get_matches_from(command);
         assert_eq!(
-            matches.err().map(|x| x.kind),
+            matches.err().map(|x| x.kind()),
             Some(ErrorKind::UnknownArgument),
         );
 
         // not `add`
         let command = vec!["problem-creator", "test", "project_dir"];
-        let matches = App::new("problem-creator")
+        let matches = ClapCommand::new("problem-creator")
             .subcommand(add_command.get_subcommand())
-            .subcommand(App::new("test").arg(Arg::new("PROJECT").required(true).index(1)))
+            .subcommand(ClapCommand::new("test").arg(Arg::new("PROJECT").required(true).index(1)))
             .get_matches_from(command);
         assert_eq!(add_command.check(&matches), None);
     }

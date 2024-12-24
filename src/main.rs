@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate clap;
-use clap::{App, AppSettings};
+use clap::Command as ClapCommand;
 use creo::cmd::{add, all, check, gen, init, refgen, test, val, Command};
 use creo::entity::project::ProjectImpl;
 
@@ -30,11 +30,11 @@ fn main() {
         },
     ];
 
-    let mut app = App::new(crate_name!())
+    let mut app = ClapCommand::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())
         .author(crate_authors!())
-        .setting(AppSettings::ArgRequiredElseHelp);
+        .arg_required_else_help(true);
     for cmd in &commands {
         app = app.subcommand(cmd.get_subcommand());
     }

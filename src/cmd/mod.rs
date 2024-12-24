@@ -1,4 +1,4 @@
-use clap::{App, ArgMatches};
+use clap::{ArgMatches, Command as ClapCommand};
 
 pub mod add;
 pub mod all;
@@ -10,6 +10,6 @@ pub mod test;
 pub mod val;
 
 pub trait Command {
-    fn get_subcommand<'a>(&self) -> App<'a>;
+    fn get_subcommand<'a>(&self) -> ClapCommand<'a>;
     fn check(&mut self, matches: &ArgMatches) -> Option<()>;
 }
